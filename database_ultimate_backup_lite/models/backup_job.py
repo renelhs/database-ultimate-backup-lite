@@ -292,7 +292,7 @@ class BackupJob(models.Model):
         This uses the same method as Odoo's built-in database backup functionality.
         """
         # Security check - ensure we're running from the backup system or manual backup
-        cron_user = self.env.ref('database_ultimate_backup.backup_cron').user_id
+        cron_user = self.env.ref('database_ultimate_backup_lite.backup_cron').user_id
         is_cron_user = self.env.user.id == cron_user.id
         is_manual_backup = self.is_manual
         

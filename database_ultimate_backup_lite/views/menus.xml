@@ -5,7 +5,7 @@
         id="database_ultimate_backup_menu_root"
         name="Database Ultimate Backup Lite"
         sequence="14"
-        web_icon="database_ultimate_backup,static/description/icon.png">
+        web_icon="database_ultimate_backup_lite,static/description/icon.png">
 
         <menuitem
             id="menu_backup_configurations"
