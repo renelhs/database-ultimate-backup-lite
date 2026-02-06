@@ -70,7 +70,7 @@
     'auto_install': False,
     'application': True,
 
-    'license': 'MIT',
+    'license': 'Other OSI approved licence',
 
     # Store metadata
     'price': 0,
