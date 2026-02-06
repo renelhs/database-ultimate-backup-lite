@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Local Provider Views -->
+    <record id="view_backup_provider_local_list" model="ir.ui.view">
+        <field name="name">backup.provider.local.list</field>
+        <field name="model">backup.provider.local</field>
+        <field name="arch" type="xml">
+            <list string="Local Storage Providers" decoration-muted="not active">
+                <field name="name"/>
+                <field name="provider_type"/>
+                <field name="backup_directory"/>
+                <field name="check_disk_space" widget="boolean_toggle"/>
+                <field name="min_free_space_gb" string="Min Space (GB)"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_backup_provider_local_form" model="ir.ui.view">
+        <field name="name">backup.provider.local.form</field>
+        <field name="model">backup.provider.local</field>
+        <field name="arch" type="xml">
+            <form string="Local Storage Provider">
+                <header>
+                    <button name="test_connection_action" type="object" string="Test Connection" class="btn-secondary"/>
+                </header>
+
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <field name="provider_type" readonly="1"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Storage Settings">
+                            <group>
+                                <group string="Directory Configuration">
+                                    <field name="backup_directory"/>
+                                    <field name="create_subdirectories"/>
+                                    <field name="directory_pattern" invisible="not create_subdirectories"/>
+                                </group>
+                                <group string="Space Management">
+                                    <field name="check_disk_space"/>
+                                    <field name="min_free_space_gb" invisible="not check_disk_space"/>
+                                    <field name="max_directory_size_gb"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Connection Test">
+                            <group>
+                                <field name="test_connection_date" readonly="1"/>
+                                <field name="test_connection_result" readonly="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_backup_provider_local_search" model="ir.ui.view">
+        <field name="name">backup.provider.local.search</field>
+        <field name="model">backup.provider.local</field>
+        <field name="arch" type="xml">
+            <search string="Local Storage Providers">
+                <field name="name" string="Name"/>
+                <field name="backup_directory" string="Directory"/>
+
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
+
+                <group>
+                    <filter string="Status" name="group_status" context="{'group_by': 'active'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_backup_provider_local" model="ir.actions.act_window">
+        <field name="name">Local Storage Providers</field>
+        <field name="res_model">backup.provider.local</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first local storage provider
+            </p>
+            <p>
+                Configure local filesystem locations where your database backups will be stored.
+                Local providers are fast and reliable for on-premise backup storage.
+            </p>
+        </field>
+    </record>
+</odoo>
