@@ -50,13 +50,20 @@ class BackupConfig(models.Model):
     ], string='Backup Format', required=True, default='zip',
        help='Format of the backup file')
     
-    # Storage providers 
+    # Storage providers
     local_provider_ids = fields.Many2many(
         'backup.provider.local',
         'backup_config_local_provider_rel',
         'config_id', 'provider_id',
         string='Local Storage Providers',
         help='Local filesystem storage providers'
+    )
+    sftp_provider_ids = fields.Many2many(
+        'backup.provider.sftp',
+        'backup_config_sftp_provider_rel',
+        'config_id', 'provider_id',
+        string='SFTP Storage Providers',
+        help='SFTP/SSH remote storage providers'
     )
     # Retention policy
     retention_policy = fields.Selection([
@@ -139,7 +146,7 @@ class BackupConfig(models.Model):
     @property
     def all_providers(self):
         """Get all configured providers."""
-        return list(self.local_provider_ids)
+        return list(self.local_provider_ids) + list(self.sftp_provider_ids)
 
     def _get_current_database(self):
         """Get current database name."""

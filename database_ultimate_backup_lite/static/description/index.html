@@ -75,14 +75,14 @@
                         <div class="col-lg-8 mx-auto gap-4 d-flex flex-column align-items-center">
                             <p class="my-1 text-center text-uppercase"
                                style="letter-spacing: 4px !important; color: #667eea; font-weight: bold; text-align: center; font-size: 14px; font-weight: 600; line-height: 15.96px; text-transform: uppercase;">
-                                Free Local Backup Solution
+                                Free Local &amp; SFTP Backup Solution
                             </p>
                             <h1 class="text-center text-uppercase my-0"
                                 style="color: #121212; font-size: 46px; font-weight: 700; line-height: normal;">
                                 Database Ultimate Backup <span style="color: #667eea;">Lite</span>
                             </h1>
                             <p class="text-center" style="color: #64728f; font-size: 18px; max-width: 600px;">
-                                Zero dependencies. Just install and start backing up your Odoo database.
+                                Back up your Odoo database locally or to any remote server via SFTP.
                             </p>
                         </div>
                         <div class="d-flex justify-content-center mt-4">
@@ -92,6 +92,10 @@
                                         <div style="margin: 10px 15px; text-align: center;">
                                             <div style="font-size: 2em;">🗄️</div>
                                             <div style="font-weight: 600; margin-top: 5px;">Local Storage</div>
+                                        </div>
+                                        <div style="margin: 10px 15px; text-align: center;">
+                                            <div style="font-size: 2em;">🔒</div>
+                                            <div style="font-weight: 600; margin-top: 5px;">SFTP Remote</div>
                                         </div>
                                         <div style="margin: 10px 15px; text-align: center;">
                                             <div style="font-size: 2em;">🔄</div>
@@ -124,8 +128,8 @@
                             <h3 class="wrapper-details"
                                 style="font-size: 20px; font-weight: 400; color: #fff; line-height: 32px;">
                                 Free, reliable database backup solution designed for Odoo 19.0.
-                                <br>Automated local backups with retention policies, integrity verification, and monitoring!
-                                <br><br><strong>No external dependencies required.</strong>
+                                <br>Automated local &amp; SFTP remote backups with retention policies, integrity verification, and monitoring!
+                                <br><br><strong>Now with SFTP support for real off-site backups.</strong>
                             </h3>
                         </div>
                         <div class="position-absolute bottom-0 end-0">
@@ -307,11 +311,11 @@
                                         <div class="col-md-12 mb-4">
                                             <p style="font-weight:400; font-size:16px; line-height:150%; text-align:center; color:#64728f">
                                                 Database Ultimate Backup Lite is a free, reliable backup solution designed for Odoo 19.0.
-                                                It provides automated local database backup capabilities with retention policies,
-                                                integrity verification, scheduling, and real-time monitoring.
+                                                It provides automated database backup capabilities with local and SFTP remote storage,
+                                                retention policies, integrity verification, scheduling, and real-time monitoring.
                                             </p>
                                             <p style="font-weight:400; font-size:16px; line-height:150%; text-align:center; color:#64728f">
-                                                Zero external dependencies - just install and start protecting your data.
+                                                Store backups locally or transfer them securely to any remote server via SFTP.
                                                 Built with the Strategy design pattern for clean architecture and extensibility.
                                             </p>
                                         </div>
@@ -345,9 +349,9 @@
                                                     </p>
                                                 </div>
                                                 <div class="col-md-6 mb-3">
-                                                    <h4 style="color: #667eea; font-weight: 600;">On-Premise Servers</h4>
+                                                    <h4 style="color: #667eea; font-weight: 600;">Off-Site Disaster Recovery</h4>
                                                     <p style="color: #64728f;">
-                                                        Use local storage or NAS-mounted directories for reliable on-premise backups with disk space monitoring.
+                                                        Use SFTP to send backups to a remote server for true off-site disaster recovery. Combine with local storage for redundancy.
                                                     </p>
                                                 </div>
                                                 <div class="col-md-6 mb-3">
@@ -382,6 +386,24 @@
                                         <div class="ms-5">
                                             <p class="m-0" style="color:#718096">
                                                 Store backups on local filesystem or network-mounted drives with disk space monitoring, directory organization, and integrity verification.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-sm-12 p-3">
+                                    <div class="d-flex flex-column align-items-start h-100"
+                                         style="padding:30px; border-radius:12px; background-color:#faf8ff">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <div class="d-flex align-items-center justify-content-center"
+                                                 style="width:36px; height:36px; border-radius:50%; background-color:#667eea; margin-right:10px">
+                                                <i class="fa fa-star" style="color:#fff; font-size:14px"></i>
+                                            </div>
+                                            <p style="color:#1A202C; font-weight:600; font-size:1.2rem; margin-bottom:2px">
+                                                SFTP Remote Storage</p>
+                                        </div>
+                                        <div class="ms-5">
+                                            <p class="m-0" style="color:#718096">
+                                                Securely transfer backups to any remote SSH/SFTP server. High-performance transfers powered by AsyncSSH with upload verification.
                                             </p>
                                         </div>
                                     </div>
@@ -458,24 +480,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6 col-sm-12 p-3">
-                                    <div class="d-flex flex-column align-items-start h-100"
-                                         style="padding:30px; border-radius:12px; background-color:#faf8ff">
-                                        <div class="d-flex align-items-center justify-content-center">
-                                            <div class="d-flex align-items-center justify-content-center"
-                                                 style="width:36px; height:36px; border-radius:50%; background-color:#667eea; margin-right:10px">
-                                                <i class="fa fa-star" style="color:#fff; font-size:14px"></i>
-                                            </div>
-                                            <p style="color:#1A202C; font-weight:600; font-size:1.2rem; margin-bottom:2px">
-                                                Zero Dependencies</p>
-                                        </div>
-                                        <div class="ms-5">
-                                            <p class="m-0" style="color:#718096">
-                                                No external Python libraries required. Install directly from the Odoo App Store without any pip install commands.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
@@ -519,17 +523,24 @@
                                     </div>
                                 </div>
 
-                                <!-- Screenshot 8 -->
+                                <!-- Screenshot 5 -->
                                 <div class="col-12 mb-5">
                                     <div style="background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                                        <img src="screenshot_8.png" alt="Backup Scheduler" style="width: 100%; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                                        <img src="screenshot_5.png" alt="SFTP Storage Providers" style="width: 100%; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
                                     </div>
                                 </div>
 
-                                <!-- Screenshot 9 -->
+                                <!-- Screenshot 6 -->
                                 <div class="col-12 mb-5">
                                     <div style="background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                                        <img src="screenshot_9.png" alt="Backup Cleanup" style="width: 100%; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                                        <img src="screenshot_6.png" alt="Backup Scheduler" style="width: 100%; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                                    </div>
+                                </div>
+
+                                <!-- Screenshot 7 -->
+                                <div class="col-12 mb-5">
+                                    <div style="background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                        <img src="screenshot_7.png" alt="Backup Cleanup" style="width: 100%; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
                                     </div>
                                 </div>
                             </div>
@@ -546,17 +557,24 @@
                                     </h2>
 
                                     <div class="mb-4" style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; border-radius: 4px;">
-                                        <strong>Get started in 4 easy steps! No external dependencies required.</strong>
+                                        <strong>Get started in 4 easy steps! Install <code>asyncssh</code> for SFTP support: <code>pip install asyncssh</code></strong>
                                     </div>
 
-                                    <h3 style="color: #667eea; margin-top: 30px;">1. Configure a Local Storage Provider</h3>
+                                    <h3 style="color: #667eea; margin-top: 30px;">1. Configure a Storage Provider</h3>
                                     <p style="color: #64728f;">
-                                        Navigate to <strong>Database Ultimate Backup Lite > Storage Providers > Local Storage</strong> and create your first provider:
+                                        Navigate to <strong>Database Ultimate Backup Lite > Storage Providers</strong> and create a provider:
                                     </p>
+                                    <h5 style="color: #764ba2;">Option A: Local Storage</h5>
                                     <ul style="color: #64728f;">
-                                        <li><strong>Local Storage:</strong> Specify a directory path (e.g., <code>/opt/odoo/backups</code>)</li>
+                                        <li>Specify a directory path (e.g., <code>/opt/odoo/backups</code>)</li>
                                         <li>Enable disk space checking with minimum free space threshold</li>
                                         <li>Optionally organize backups in date-based subdirectories</li>
+                                    </ul>
+                                    <h5 style="color: #764ba2;">Option B: SFTP Remote Storage</h5>
+                                    <ul style="color: #64728f;">
+                                        <li>Enter hostname, port, username, and password</li>
+                                        <li>Specify the remote directory (e.g., <code>/home/backups/odoo</code>)</li>
+                                        <li>Enable automatic directory creation if needed</li>
                                     </ul>
                                     <p style="color: #64728f;">
                                         Use the <strong>Test Connection</strong> button to verify the provider is configured correctly.
@@ -569,7 +587,7 @@
                                     <ul style="color: #64728f;">
                                         <li>Give it a descriptive name (e.g., "Daily Production Backup")</li>
                                         <li>Select your backup format (ZIP recommended for full backups)</li>
-                                        <li>Choose your local storage provider</li>
+                                        <li>Choose your local and/or SFTP storage providers</li>
                                         <li>Configure retention policy (e.g., keep last 7 backups)</li>
                                         <li>Enable email notifications if desired</li>
                                     </ul>
@@ -600,7 +618,7 @@
                                             <ul style="color: #64728f;">
                                                 <li><strong>Odoo Version:</strong> 19.0 (Community or Enterprise)</li>
                                                 <li><strong>Python Version:</strong> 3.10+</li>
-                                                <li><strong>Dependencies:</strong> None (zero external dependencies!)</li>
+                                                <li><strong>Dependencies:</strong> <code>asyncssh</code> (for SFTP support)</li>
                                             </ul>
                                         </div>
                                         <div class="col-md-6">
@@ -622,7 +640,7 @@
                 <div class="my-5">
                     <div style="background-color: #f8f9fa; border: 2px solid #667eea; padding: 40px; border-radius: 8px; text-align: center;">
                         <h2 style="margin: 0 0 15px 0; color: #667eea; font-size: 32px; font-weight: 700;">
-                            Need Cloud Storage?
+                            Need Multi-Cloud Storage?
                         </h2>
                         <p style="font-size: 1.1em; margin: 10px 0; color: #64728f;">
                             Upgrade to <a href="https://apps.odoo.com/apps/modules/19.0/database_ultimate_backup" target="_blank" style="color: #667eea; font-weight: 700; text-decoration: underline;"><strong>Database Ultimate Backup</strong></a> (Full Edition) for enterprise-grade multi-cloud support:
@@ -632,8 +650,8 @@
                             <span style="background: #667eea; color: white; padding: 8px 16px; border-radius: 20px; margin: 5px; font-weight: 600;">Azure Blob</span>
                             <span style="background: #667eea; color: white; padding: 8px 16px; border-radius: 20px; margin: 5px; font-weight: 600;">Google Cloud</span>
                             <span style="background: #667eea; color: white; padding: 8px 16px; border-radius: 20px; margin: 5px; font-weight: 600;">DigitalOcean</span>
-                            <span style="background: #667eea; color: white; padding: 8px 16px; border-radius: 20px; margin: 5px; font-weight: 600;">SFTP</span>
                             <span style="background: #667eea; color: white; padding: 8px 16px; border-radius: 20px; margin: 5px; font-weight: 600;">Parallel Uploads</span>
+                            <span style="background: #667eea; color: white; padding: 8px 16px; border-radius: 20px; margin: 5px; font-weight: 600;">Server-side Encryption</span>
                         </div>
                     </div>
                 </div>
@@ -646,7 +664,7 @@
                         </h2>
                         <p style="font-size: 1.1em; margin: 10px 0;">
                             Install <strong>Database Ultimate Backup Lite</strong> today - it's free!
-                            Enjoy automated, verified, and reliable local database backups.
+                            Enjoy automated, verified, and reliable local &amp; SFTP database backups.
                         </p>
                         <p style="margin-top: 20px; font-size: 1.2em;">
                             Don't forget to rate this module if you find it useful!
@@ -660,10 +678,10 @@
 
 <div class="footer" style="text-align: center; padding: 40px 20px; color: #777; font-size: 0.9em; background: #f9f9f9; margin-top: 40px;">
     <p style="margin: 5px 0;"><strong>Database Ultimate Backup Lite for Odoo 19.0</strong></p>
-    <p style="margin: 5px 0;">Version 1.0.0 | Licensed under MIT | Free</p>
+    <p style="margin: 5px 0;">Version 1.1.0 | Licensed under MIT | Free</p>
     <p style="margin: 5px 0;">Developed by René Hechavarría</p>
     <p style="margin-top: 15px; font-style: italic;">
-        Free local backup solution with automated scheduling,
+        Free local &amp; SFTP backup solution with automated scheduling,
         retention policies, and comprehensive monitoring.
     </p>
 </div>

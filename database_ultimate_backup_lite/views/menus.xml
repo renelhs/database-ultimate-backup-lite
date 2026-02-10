@@ -33,6 +33,13 @@
                 sequence="10"
             />
 
+            <menuitem
+                id="menu_sftp_providers"
+                name="SFTP Storage"
+                action="action_backup_provider_sftp"
+                sequence="20"
+            />
+
         </menuitem>
 
     </menuitem>
