@@ -291,6 +291,13 @@
                                    href="#configuration" id="configuration-tab" role="tab"
                                    style="color:#121212; font-weight:500; font-size:16px">Configuration</a>
                             </li>
+                            <li class="nav-item">
+                                <a aria-controls="releases"
+                                   aria-bs-selected="false" class="nav-link"
+                                   data-bs-toggle="tab" href="#releases"
+                                   id="releases-tab" role="tab"
+                                   style="color:#121212; font-weight:500; font-size:16px">Releases</a>
+                            </li>
                         </ul>
                     </div>
                     <div class="tab-content p-md-5 p-2 py-3" id="overviewTabContent">
@@ -627,6 +634,84 @@
                                                 <li>Small databases (&lt;1GB): 1-5 minutes</li>
                                                 <li>Medium databases (1-20GB): 5-30 minutes</li>
                                                 <li>Large databases (&gt;20GB): 30+ minutes</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Release Notes Tab -->
+                        <div aria-labelledby="releases-tab"
+                             class="tab-pane fade show" id="releases"
+                             role="tabpanel">
+
+                            <!-- Version 19.0.1.1.0 -->
+                            <div class="row pt-5 m-0">
+                                <div class="col-md-3">
+                                    <h4 style="font-size:16px; font-weight:600; color:#514F4F; margin:0; line-height:26px;">
+                                        Latest Release 19.0.1.1.0
+                                    </h4>
+                                    <span style="font-size:14px; color:#7A7979; display:block; margin-bottom:20px;">
+                                        February 10, 2026
+                                    </span>
+                                </div>
+                                <div class="col-md-8">
+                                    <div style="padding:0 0 40px">
+                                        <div style="margin:0 0 10px">
+                                            <div style="display:inline-block; padding:4px 12px; color:#fff; background-color:#28a745; border-radius:20px; margin-right: 8px;">
+                                                Added
+                                            </div>
+                                        </div>
+                                        <div class="d-flex m-0" style="color:#7A7979;">
+                                            <ul class="pl-3 mb-0">
+                                                <li><strong>SFTP Remote Storage Provider</strong> - Securely transfer backups to any remote SSH/SFTP server with high-performance AsyncSSH transfers</li>
+                                                <li>Password-based SFTP authentication</li>
+                                                <li>Automatic remote directory creation</li>
+                                                <li>Upload verification (file size check)</li>
+                                                <li>Configurable connection and transfer timeouts</li>
+                                                <li>Remote backup management (list, download, delete)</li>
+                                                <li>Remote disk space monitoring</li>
+                                                <li>SFTP provider selection in backup configuration form</li>
+                                                <li>New SFTP Storage menu under Storage Providers</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div style="padding:0 0 0; border-bottom:1px solid #E3E3E3"></div>
+                                </div>
+                            </div>
+
+                            <!-- Version 19.0.1.0.0 -->
+                            <div class="row pt-3 m-0">
+                                <div class="col-md-3">
+                                    <h4 style="font-size:16px; font-weight:600; color:#514F4F; margin:0; line-height:26px;">
+                                        Version 19.0.1.0.0
+                                    </h4>
+                                    <span style="font-size:14px; color:#7A7979; display:block; margin-bottom:20px;">
+                                        February 06, 2026
+                                    </span>
+                                </div>
+                                <div class="col-md-8">
+                                    <div style="padding:0 0 40px">
+                                        <div style="margin:0 0 10px">
+                                            <div style="display:inline-block; padding:4px 12px; color:#fff; background-color:#28a745; border-radius:20px; margin-right: 8px;">
+                                                Initial Release
+                                            </div>
+                                        </div>
+                                        <div class="d-flex m-0" style="color:#7A7979;">
+                                            <ul class="pl-3 mb-0">
+                                                <li>Initial release of Database Ultimate Backup Lite for Odoo 19.0</li>
+                                                <li>Local filesystem storage provider with disk space monitoring</li>
+                                                <li>Automated backup scheduling with cron jobs</li>
+                                                <li>ZIP archives (with filestore) and PostgreSQL dump formats</li>
+                                                <li>Integrity verification of backup files</li>
+                                                <li>Flexible retention policies (count-based and time-based)</li>
+                                                <li>Automated cleanup of old backups</li>
+                                                <li>Real-time backup job monitoring and tracking</li>
+                                                <li>Email notifications for success and failures</li>
+                                                <li>Success rate tracking and statistics</li>
+                                                <li>Two-tier access control (User/Administrator)</li>
+                                                <li>Custom backup filename templates</li>
                                             </ul>
                                         </div>
                                     </div>
