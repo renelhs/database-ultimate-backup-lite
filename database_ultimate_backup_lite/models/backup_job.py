@@ -3,14 +3,19 @@
 import os
 import datetime
 import re
+import subprocess
 import tempfile
 import json
 import shutil
 import zipfile
 import logging
 
+import odoo.release
+import odoo.sql_db
 from odoo import models, fields, api, tools
 from odoo.exceptions import UserError, AccessDenied
+from odoo.tools import osutil
+from odoo.tools.misc import exec_pg_environ, find_pg_tool
 
 _logger = logging.getLogger(__name__)
 
@@ -287,39 +292,102 @@ class BackupJob(models.Model):
     
     def _create_database_dump(self, stream):
         """
-        Create database dump using Odoo's native backup system.
-        
-        This uses the same method as Odoo's built-in database backup functionality.
+        Create database dump.
+
+        Uses an internal dump implementation that replicates Odoo's
+        ``odoo.service.db.dump_db`` logic without the
+        ``@check_db_management_enabled`` decorator.  This allows backups
+        to work even when ``list_db = False`` is set in odoo.conf.
         """
         # Security check - ensure we're running from the backup system or manual backup
         cron_user = self.env.ref('database_ultimate_backup_lite.backup_cron').user_id
         is_cron_user = self.env.user.id == cron_user.id
         is_manual_backup = self.is_manual
-        
-        # Allow manual backups for any user who can access the backup functionality
-        # (permissions are controlled by view access and menu security)
+
         if not is_cron_user and not is_manual_backup:
             raise AccessDenied("Database dumps can only be created by the backup system or as manual backups")
-        
+
         self._log(f"Creating {self.backup_format} dump of database: {self.database_name}")
-        
+
         try:
-            # Use Odoo's native database backup system
-            from odoo.service import db
-            
-            # Get dump stream using Odoo's native method
-            # This handles both 'zip' and 'dump' formats correctly
-            dump_stream = db.dump_db(self.database_name, None, self.backup_format)
-            
-            # Write the dump to our stream
-            for chunk in dump_stream:
-                stream.write(chunk)
-            
-            self._log("Database dump created successfully using Odoo's native backup system")
-            
+            self._dump_db(self.database_name, stream, self.backup_format)
+            self._log("Database dump created successfully")
         except Exception as e:
             self._log(f"Database dump failed: {str(e)}")
             raise UserError(f"Database backup failed: {str(e)}")
+
+    # ------------------------------------------------------------------
+    # Internal dump helpers (mirror odoo.service.db without decorator)
+    # ------------------------------------------------------------------
+
+    def _dump_db_manifest(self, cr):
+        """Generate the manifest dict for a ZIP backup.
+
+        Replicates ``odoo.service.db.dump_db_manifest`` so that we are
+        not affected by the ``@check_db_management_enabled`` decorator.
+        """
+        pg_version = "%d.%d" % divmod(cr._obj.connection.server_version / 100, 100)
+        cr.execute("SELECT name, latest_version FROM ir_module_module WHERE state = 'installed'")
+        modules = dict(cr.fetchall())
+        return {
+            'odoo_dump': '1',
+            'db_name': cr.dbname,
+            'version': odoo.release.version,
+            'version_info': odoo.release.version_info,
+            'major_version': odoo.release.major_version,
+            'pg_version': pg_version,
+            'modules': modules,
+        }
+
+    def _dump_db(self, db_name, stream, backup_format='zip'):
+        """Dump *db_name* into the file-like *stream*.
+
+        This is a faithful copy of ``odoo.service.db.dump_db`` **without**
+        the ``@check_db_management_enabled`` decorator so that backups
+        work regardless of the ``list_db`` setting.
+        """
+        _logger.info(
+            'DUMP DB: %s format %s with filestore', db_name, backup_format,
+        )
+
+        cmd = [find_pg_tool('pg_dump'), '--no-owner', db_name]
+        env = exec_pg_environ()
+
+        if backup_format == 'zip':
+            with tempfile.TemporaryDirectory() as dump_dir:
+                # Copy filestore
+                filestore = odoo.tools.config.filestore(db_name)
+                if os.path.exists(filestore):
+                    shutil.copytree(filestore, os.path.join(dump_dir, 'filestore'))
+
+                # Generate manifest
+                with open(os.path.join(dump_dir, 'manifest.json'), 'w') as fh:
+                    db = odoo.sql_db.db_connect(db_name)
+                    with db.cursor() as cr:
+                        json.dump(self._dump_db_manifest(cr), fh, indent=4)
+
+                # Run pg_dump
+                cmd.insert(-1, '--file=' + os.path.join(dump_dir, 'dump.sql'))
+                subprocess.run(
+                    cmd, env=env,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.STDOUT,
+                    check=True,
+                )
+
+                # Write ZIP to stream
+                osutil.zip_dir(
+                    dump_dir, stream, include_dir=False,
+                    fnct_sort=lambda file_name: file_name != 'dump.sql',
+                )
+        else:
+            cmd.insert(-1, '--format=c')
+            stdout = subprocess.Popen(
+                cmd, env=env,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+            ).stdout
+            shutil.copyfileobj(stdout, stream)
     
     def _verify_backup_integrity(self, backup_file_path):
         """Verify backup file integrity."""
