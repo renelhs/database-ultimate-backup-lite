@@ -1,15 +1,15 @@
-# Database Ultimate Backup Lite for Odoo 19.0
+# Database Ultimate Backup Lite
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Odoo Version](https://img.shields.io/badge/Odoo-19.0-brightgreen.svg)](https://www.odoo.com)
 [![Price](https://img.shields.io/badge/Price-Free-green.svg)]()
 
-A free, reliable database backup solution for Odoo 19.0 with local storage, automated scheduling, retention policies, and comprehensive monitoring. Zero external dependencies - just install and start backing up!
+A free, reliable database backup solution for Odoo with **local and SFTP remote storage**, automated scheduling, retention policies, and comprehensive monitoring.
 
 ## Features
 
 ### Core Capabilities
 - **Local Storage**: Store backups on local filesystem or network-mounted drives
+- **SFTP Remote Storage**: Securely transfer backups to remote servers via SSH/SFTP
 - **Backup Formats**: ZIP archives (with filestore) or PostgreSQL dumps
 - **Integrity Verification**: Automatic verification of backup files after creation
 - **Flexible Scheduling**: Automated backups via cron jobs with configurable intervals
@@ -27,6 +27,14 @@ A free, reliable database backup solution for Odoo 19.0 with local storage, auto
 - Integrity verification
 - Organized directory structure with date-based folders
 
+### SFTP Storage Provider
+- High-performance transfers powered by AsyncSSH
+- Password-based authentication
+- Automatic remote directory creation
+- Upload verification (file size check)
+- Configurable connection and transfer timeouts
+- Remote disk space monitoring
+
 ### Security
 - Two-tier access control (User and Administrator)
 - Granular model-level permissions
@@ -34,16 +42,20 @@ A free, reliable database backup solution for Odoo 19.0 with local storage, auto
 
 ## Installation
 
-### 1. Install the Module
+### 1. Install Dependencies
 
-No external dependencies required!
+```bash
+pip install asyncssh
+```
 
-1. Copy the `database_ultimate_backup` folder to your Odoo addons directory
+### 2. Install the Module
+
+1. Copy the `database_ultimate_backup_lite` folder to your Odoo addons directory
 2. Update the apps list: Go to Apps > Update Apps List
 3. Search for "Database Ultimate Backup Lite"
 4. Click Install
 
-### 2. Configure Permissions
+### 3. Configure Permissions
 
 Assign users to backup groups:
 - **Settings > Users & Companies > Users**
@@ -54,7 +66,9 @@ Assign users to backup groups:
 
 ## Quick Start Guide
 
-### Step 1: Configure a Local Storage Provider
+### Step 1: Configure a Storage Provider
+
+#### Option A: Local Storage
 
 Navigate to **Database Ultimate Backup Lite > Storage Providers > Local Storage** and create a provider:
 
@@ -63,6 +77,20 @@ Name: Local Backup Server
 Backup Directory: /opt/odoo/backups
 Check Disk Space: Yes (recommended)
 Min Free Space: 5 GB
+```
+
+#### Option B: SFTP Remote Storage
+
+Navigate to **Database Ultimate Backup Lite > Storage Providers > SFTP Storage** and create a provider:
+
+```
+Name: Remote Backup Server
+Hostname: backup.example.com
+Port: 22
+Username: backup_user
+Password: ********
+Remote Directory: /home/backups/odoo
+Create Remote Directories: Yes
 ```
 
 Use the **Test Connection** button to verify the provider is configured correctly.
@@ -77,7 +105,7 @@ Database: [automatically populated with current database]
 Backup Format: ZIP Archive (includes filestore)
 
 Storage Providers:
-- Select your local storage provider
+- Select your local and/or SFTP storage providers
 
 Retention Policy: Keep Last N Backups
 Number of Backups to Keep: 7
@@ -140,7 +168,7 @@ Customize backup filenames using variables:
 ### Common Issues
 
 **"No storage providers configured"**
-- Configure at least one local storage provider before creating backups
+- Configure at least one storage provider (Local or SFTP) before creating backups
 - Ensure the provider is set to Active
 
 **"Backup failed: disk space"**
@@ -148,12 +176,22 @@ Customize backup filenames using variables:
 - Reduce retention count or days
 - Run cleanup manually to free space
 
+**"AsyncSSH library not found"**
+- Install the required dependency: `pip install asyncssh`
+- Restart the Odoo service after installation
+
+**"SFTP connection failed"**
+- Verify hostname, port, username, and password
+- Ensure the SFTP server is reachable from the Odoo server
+- Check firewall rules for SSH port (default: 22)
+- Use the Test Connection button to diagnose issues
+
 **"Scheduled backups not running"**
 - Verify the cron job is active: Settings > Technical > Scheduled Actions
 - Check backup configuration is marked as Active
 - Review system logs for cron execution errors
 
-## Need Cloud Storage?
+## Need Multi-Cloud Storage?
 
 Upgrade to **Database Ultimate Backup** (Full Edition) for enterprise-grade multi-cloud support:
 
@@ -161,8 +199,8 @@ Upgrade to **Database Ultimate Backup** (Full Edition) for enterprise-grade mult
 - **Azure Blob Storage** - Storage tiers, geo-redundancy
 - **Google Cloud Storage** - Flexible classes, KMS encryption
 - **DigitalOcean Spaces** - Cost-effective cloud storage
-- **SFTP** - Secure remote transfers (15x faster with AsyncSSH)
 - **Parallel Uploads** - Upload to multiple providers simultaneously
+- **Server-side Encryption** - AES256 and KMS encryption
 
 ## Support
 
@@ -179,9 +217,10 @@ This module is licensed under the MIT License. See [LICENSE](LICENSE) file for d
 - René Hechavarría
 
 ### Built With
-- Odoo 19.0 Community/Enterprise Framework
+- Odoo Community/Enterprise Framework
+- AsyncSSH for high-performance SFTP transfers
 - Strategy design pattern for extensibility
 
 ---
 
-**Database Ultimate Backup Lite** - Free local backup solution for Odoo 19.0
+**Database Ultimate Backup Lite** - Free local & SFTP backup solution for Odoo
