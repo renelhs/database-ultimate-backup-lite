@@ -5,42 +5,11 @@ All notable changes to the Database Ultimate Backup Lite module will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [19.0.1.1.0] - 2026-02-10
+## [18.0.1.0.0] - 2026-02-23
 
-### SFTP Remote Storage Support
+### Initial Release for Odoo 18.0
 
-Added SFTP/SSH remote storage provider, making the Lite edition a truly functional
-off-site backup solution.
-
-### Added
-
-#### SFTP Storage Provider
-- **Remote Backup Storage**: Securely transfer backups to any SSH/SFTP server
-- **High-Performance Transfers**: Powered by AsyncSSH for fast, reliable uploads
-- **Password Authentication**: Simple password-based SFTP authentication
-- **Automatic Directory Creation**: Optionally create remote directories on the fly
-- **Upload Verification**: Automatic file size verification after transfer
-- **Configurable Timeouts**: Connection and transfer timeout settings
-- **File Permission Preservation**: Optionally preserve file permissions during transfer
-- **Remote Backup Management**: List, download, and delete backups on remote servers
-- **Disk Space Monitoring**: Remote server disk space information
-
-#### Configuration Updates
-- SFTP providers can now be assigned to backup configurations alongside local providers
-- New SFTP Storage menu under Storage Providers
-- Updated backup configuration form with SFTP provider selection
-
-### Changed
-- Module now requires `asyncssh` Python package (`pip install asyncssh`)
-- Updated module description to reflect SFTP capabilities
-
----
-
-## [19.0.1.0.0] - 2026-02-06
-
-### Initial Release (Lite Edition)
-
-Free local backup solution for Odoo 19.0 - zero external dependencies.
+Complete backup solution for Odoo 18.0 with local and SFTP remote storage.
 
 ### Added
 
@@ -55,8 +24,19 @@ Free local backup solution for Odoo 19.0 - zero external dependencies.
 - Store backups on local filesystem or network-mounted drives
 - Directory organization with date-based folders
 - Disk space checking and monitoring
-- Integrity verification
+- Integrity verification (MD5)
 - Storage information display
+
+#### SFTP Remote Storage Provider
+- **Remote Backup Storage**: Securely transfer backups to any SSH/SFTP server
+- **High-Performance Transfers**: Powered by AsyncSSH for fast, reliable uploads
+- **Password Authentication**: Simple password-based SFTP authentication
+- **Automatic Directory Creation**: Optionally create remote directories on the fly
+- **Upload Verification**: Automatic file size verification after transfer
+- **Configurable Timeouts**: Connection and transfer timeout settings
+- **File Permission Preservation**: Optionally preserve file permissions during transfer
+- **Remote Backup Management**: List, download, and delete backups on remote servers
+- **Disk Space Monitoring**: Remote server disk space information
 
 #### Advanced Features
 - **Backup Verification**: Automatic integrity checking of backup files

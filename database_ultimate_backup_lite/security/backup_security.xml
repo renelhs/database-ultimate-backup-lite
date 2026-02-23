@@ -1,38 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Category and Privilege (without noupdate to allow updates) -->
-    <record id="module_category_backup" model="ir.module.category">
-        <field name="name">Database Backup</field>
-        <field name="description">Manage database backup system access</field>
-        <field name="sequence">20</field>
-    </record>
+    <data noupdate="1">
+        <!-- Backup System Categories -->
+        <record id="module_category_backup" model="ir.module.category">
+            <field name="name">Database Backup</field>
+            <field name="description">Manage database backup system access</field>
+            <field name="sequence">20</field>
+        </record>
 
-    <!-- Backup Privilege -->
-    <record id="privilege_backup" model="res.groups.privilege">
-        <field name="name">Database Backup</field>
-        <field name="category_id" ref="module_category_backup"/>
-    </record>
+        <!-- Backup User Group -->
+        <record id="group_backup_user" model="res.groups">
+            <field name="name">User</field>
+            <field name="category_id" ref="module_category_backup"/>
+            <field name="comment">Users can view backup configurations and jobs, but cannot create or modify them.</field>
+        </record>
 
-    <!-- Backup User Group -->
-    <record id="group_backup_user" model="res.groups">
-        <field name="name">User</field>
-        <field name="privilege_id" ref="privilege_backup"/>
-        <field name="comment">Users can view backup configurations and jobs, but cannot create or modify them.</field>
-    </record>
-
-    <!-- Backup Administrator Group -->
-    <record id="group_backup_admin" model="res.groups">
-        <field name="name">Administrator</field>
-        <field name="privilege_id" ref="privilege_backup"/>
-        <field name="implied_ids" eval="[(4, ref('group_backup_user'))]"/>
-        <!-- System admins automatically get backup admin rights -->
-        <field name="implied_by_ids" eval="[(4, ref('base.group_system'))]"/>
-        <field name="user_ids" eval="[(4, ref('base.user_root'))]"/>
-        <field name="comment">Full access to backup system, including sensitive operations and system configuration.</field>
-    </record>
-
-    <!-- Ensure admin user has backup admin rights -->
-    <record id="base.user_admin" model="res.users">
-        <field name="group_ids" eval="[(4, ref('group_backup_admin'))]"/>
-    </record>
+        <!-- Backup Administrator Group -->
+        <record id="group_backup_admin" model="res.groups">
+            <field name="name">Administrator</field>
+            <field name="category_id" ref="module_category_backup"/>
+            <field name="implied_ids" eval="[(4, ref('group_backup_user'))]"/>
+            <field name="comment">Full access to backup system, including sensitive operations and system configuration.</field>
+        </record>
+    </data>
 </odoo>
