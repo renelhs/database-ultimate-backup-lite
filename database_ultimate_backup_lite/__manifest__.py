@@ -8,7 +8,7 @@
         Database Ultimate Backup Lite - Free Backup Solution with Local & SFTP
         ======================================================================
 
-        A free, reliable database backup solution for Odoo 18.0 with local and SFTP
+        A free, reliable database backup solution for Odoo 17.0 with local and SFTP
         remote storage, automated scheduling, retention policies, and comprehensive monitoring.
 
         Core Features
@@ -51,7 +51,7 @@
     'support': "reneluishs@gmail.com",
 
     'category': 'Administration',
-    'version': '18.0.1.0.0',
+    'version': '17.0.1.0.0',
 
     # Module dependencies
     'depends': ['base'],

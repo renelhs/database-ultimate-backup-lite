@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!-- Local Provider Views -->
-    <record id="view_backup_provider_local_list" model="ir.ui.view">
-        <field name="name">backup.provider.local.list</field>
+    <record id="view_backup_provider_local_tree" model="ir.ui.view">
+        <field name="name">backup.provider.local.tree</field>
         <field name="model">backup.provider.local</field>
         <field name="arch" type="xml">
-            <list string="Local Storage Providers" decoration-muted="not active">
+            <tree string="Local Storage Providers" decoration-muted="not active">
+                <field name="active" invisible="1"/>
                 <field name="name"/>
                 <field name="provider_type"/>
                 <field name="backup_directory"/>
                 <field name="check_disk_space" widget="boolean_toggle"/>
                 <field name="min_free_space_gb" string="Min Space (GB)"/>
-            </list>
+            </tree>
         </field>
     </record>
 
@@ -74,7 +75,7 @@
                 <filter string="Active" name="active" domain="[('active', '=', True)]"/>
                 <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
 
-                <group>
+                <group expand="0" string="Group By">
                     <filter string="Status" name="group_status" context="{'group_by': 'active'}"/>
                 </group>
             </search>
@@ -84,7 +85,7 @@
     <record id="action_backup_provider_local" model="ir.actions.act_window">
         <field name="name">Local Storage Providers</field>
         <field name="res_model">backup.provider.local</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">tree,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Create your first local storage provider
@@ -97,18 +98,19 @@
     </record>
 
     <!-- SFTP Provider Views -->
-    <record id="view_backup_provider_sftp_list" model="ir.ui.view">
-        <field name="name">backup.provider.sftp.list</field>
+    <record id="view_backup_provider_sftp_tree" model="ir.ui.view">
+        <field name="name">backup.provider.sftp.tree</field>
         <field name="model">backup.provider.sftp</field>
         <field name="arch" type="xml">
-            <list string="SFTP Storage Providers" decoration-muted="not active">
+            <tree string="SFTP Storage Providers" decoration-muted="not active">
+                <field name="active" invisible="1"/>
                 <field name="name"/>
                 <field name="provider_type"/>
                 <field name="hostname"/>
                 <field name="port"/>
                 <field name="username"/>
                 <field name="remote_directory"/>
-            </list>
+            </tree>
         </field>
     </record>
 
@@ -189,7 +191,7 @@
                 <filter string="Active" name="active" domain="[('active', '=', True)]"/>
                 <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
 
-                <group>
+                <group expand="0" string="Group By">
                     <filter string="Status" name="group_status" context="{'group_by': 'active'}"/>
                     <filter string="Hostname" name="group_hostname" context="{'group_by': 'hostname'}"/>
                 </group>
@@ -200,7 +202,7 @@
     <record id="action_backup_provider_sftp" model="ir.actions.act_window">
         <field name="name">SFTP Storage Providers</field>
         <field name="res_model">backup.provider.sftp</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">tree,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Create your first SFTP storage provider

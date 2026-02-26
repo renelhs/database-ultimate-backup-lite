@@ -1,10 +1,10 @@
-# Database Ultimate Backup Lite for Odoo 18.0
+# Database Ultimate Backup Lite for Odoo 17.0
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Odoo Version](https://img.shields.io/badge/Odoo-18.0-brightgreen.svg)](https://www.odoo.com)
+[![Odoo Version](https://img.shields.io/badge/Odoo-17.0-brightgreen.svg)](https://www.odoo.com)
 [![Price](https://img.shields.io/badge/Price-Free-green.svg)]()
 
-A free, reliable database backup solution for Odoo 18.0 with **local and SFTP remote storage**, automated scheduling, retention policies, and comprehensive monitoring.
+A free, reliable database backup solution for Odoo 17.0 with **local and SFTP remote storage**, automated scheduling, retention policies, and comprehensive monitoring.
 
 ## Features
 
@@ -218,10 +218,10 @@ This module is licensed under the MIT License. See [LICENSE](LICENSE) file for d
 - René Hechavarría
 
 ### Built With
-- Odoo 18.0 Community/Enterprise Framework
+- Odoo 17.0 Community/Enterprise Framework
 - AsyncSSH for high-performance SFTP transfers
 - Strategy design pattern for extensibility
 
 ---
 
-**Database Ultimate Backup Lite** - Free local & SFTP backup solution for Odoo 18.0
+**Database Ultimate Backup Lite** - Free local & SFTP backup solution for Odoo 17.0

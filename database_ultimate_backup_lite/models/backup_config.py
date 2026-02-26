@@ -150,7 +150,7 @@ class BackupConfig(models.Model):
 
     def _get_current_database(self):
         """Get current database name."""
-        return self.env.cr.dbname
+        return self._cr.dbname
     
     @api.depends('backup_job_ids.status')
     def _compute_success_rate(self):
@@ -178,7 +178,7 @@ class BackupConfig(models.Model):
             raise UserError("Cannot create backup: no storage providers configured")
         
         # Create backup job
-        is_manual = self.env.context.get('manual_execution', True)
+        is_manual = self._context.get('manual_execution', True)
         backup_job = self.env['backup.job'].create({
             'config_id': self.id,
             'database_name': self.database_name,
@@ -203,7 +203,7 @@ class BackupConfig(models.Model):
             
             # Return appropriate response based on context
             # For UI calls, return notifications. For programmatic calls (cron), return the backup_job
-            if self.env.context.get('manual_execution', True):
+            if self._context.get('manual_execution', True):
                 # Show user notification based on result
                 if result.get('success'):
                     return {
@@ -703,8 +703,8 @@ class BackupConfig(models.Model):
         for record in self:
             # Only validate when activating a configuration (not during installation)
             if (record.active and 
-                not self.env.context.get('install_mode') and
-                not self.env.context.get('module_installation') and
+                not self._context.get('install_mode') and
+                not self._context.get('module_installation') and
                 len(record.all_providers) == 0):
                 raise ValidationError("At least one storage provider must be configured for active backup configurations")
 

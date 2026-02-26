@@ -5,11 +5,11 @@ All notable changes to the Database Ultimate Backup Lite module will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [18.0.1.0.0] - 2026-02-23
+## [17.0.1.0.0] - 2026-02-26
 
-### Initial Release for Odoo 18.0
+### Initial Release for Odoo 17.0
 
-Complete backup solution for Odoo 18.0 with local and SFTP remote storage.
+Complete backup solution for Odoo 17.0 with local and SFTP remote storage.
 
 ### Added
 
@@ -24,7 +24,7 @@ Complete backup solution for Odoo 18.0 with local and SFTP remote storage.
 - Store backups on local filesystem or network-mounted drives
 - Directory organization with date-based folders
 - Disk space checking and monitoring
-- Integrity verification (MD5)
+- Integrity verification
 - Storage information display
 
 #### SFTP Remote Storage Provider
