@@ -43,11 +43,11 @@
                                 <group string="Directory Configuration">
                                     <field name="backup_directory"/>
                                     <field name="create_subdirectories"/>
-                                    <field name="directory_pattern" invisible="not create_subdirectories"/>
+                                    <field name="directory_pattern" attrs="{'invisible': [('create_subdirectories', '=', False)]}"/>
                                 </group>
                                 <group string="Space Management">
                                     <field name="check_disk_space"/>
-                                    <field name="min_free_space_gb" invisible="not check_disk_space"/>
+                                    <field name="min_free_space_gb" attrs="{'invisible': [('check_disk_space', '=', False)]}"/>
                                     <field name="max_directory_size_gb"/>
                                 </group>
                             </group>

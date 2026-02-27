@@ -66,11 +66,11 @@
                             <field name="provider_results" readonly="1"/>
                         </page>
 
-                        <page string="Verification Details" invisible="verification_status not in ['verified', 'failed']">
+                        <page string="Verification Details" attrs="{'invisible': [('verification_status', 'not in', ['verified', 'failed'])]}">
                             <field name="verification_details" readonly="1"/>
                         </page>
 
-                        <page string="Error Details" invisible="not error_message">
+                        <page string="Error Details" attrs="{'invisible': [('error_message', '=', False)]}">
                             <field name="error_message" readonly="1"/>
                         </page>
 
