@@ -2,9 +2,11 @@
 
 import os
 import datetime
+import glob
 import re
 import subprocess
 import tempfile
+import time
 import json
 import shutil
 import zipfile
@@ -14,7 +16,6 @@ import odoo.release
 import odoo.sql_db
 from odoo import models, fields, api, tools
 from odoo.exceptions import UserError, AccessDenied
-from odoo.tools import osutil
 from odoo.tools.misc import exec_pg_environ, find_pg_tool
 
 _logger = logging.getLogger(__name__)
@@ -76,15 +77,21 @@ class BackupJob(models.Model):
         store=True,
         help='Total backup duration in seconds'
     )
-    
+    duration_human = fields.Char(
+        string='Duration',
+        compute='_compute_duration_human',
+        help='Total backup duration in a human-readable format (e.g. "1h 2m 15s")'
+    )
+
     # File information
     backup_filename = fields.Char(
         string='Backup Filename',
         help='Name of the generated backup file'
     )
-    backup_size_mb = fields.Integer(
+    backup_size_mb = fields.Float(
         string='Backup Size (MB)',
-        help='Size of the backup file in megabytes'
+        digits=(20, 6),
+        help='Size of the backup file in megabytes (with sub-MB precision)'
     )
     backup_size_human = fields.Char(
         string='Backup Size',
@@ -148,59 +155,88 @@ class BackupJob(models.Model):
             else:
                 record.duration = 0.0
 
+    @api.depends('duration')
+    def _compute_duration_human(self):
+        """Format duration as a compact human-readable string (e.g. "1h 2m 15s")."""
+        for record in self:
+            total = int(record.duration or 0)
+            if total <= 0:
+                record.duration_human = '—'
+                continue
+            hours, remainder = divmod(total, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            parts = []
+            if hours:
+                parts.append(f"{hours}h")
+            if minutes:
+                parts.append(f"{minutes}m")
+            if seconds or not parts:
+                parts.append(f"{seconds}s")
+            record.duration_human = ' '.join(parts)
+
     @api.depends('backup_size_mb')
     def _compute_backup_size_human(self):
-        """Compute human-readable backup size."""
+        """Compute human-readable backup size (auto-scales to KB / MB / GB)."""
         for record in self:
-            if record.backup_size_mb:
-                # Convert MB back to bytes for human_size display
-                size_bytes = record.backup_size_mb * 1024 * 1024
-                record.backup_size_human = tools.human_size(size_bytes)
+            if record.backup_size_mb and record.backup_size_mb > 0:
+                size_bytes = int(record.backup_size_mb * 1024 * 1024)
+                record.backup_size_human = tools.human_size(size_bytes) or ''
             else:
                 record.backup_size_human = ''
     
+    # Prefixes used for every temp dir this module creates under /tmp. The
+    # safety sweep keys off these to avoid touching anything else.
+    _TEMP_DIR_PREFIXES = ('odoo_backup_', 'odoo_backup_dump_')
+
     def _process_backup(self):
         """
         Process the backup job.
-        
+
         This is the main method that orchestrates the entire backup process.
+        Owns the lifecycle of the temporary directory end-to-end so the outer
+        finally block can always clean it up, no matter where (or how) a
+        nested step fails.
         """
         self.ensure_one()
-        
-        try:
-            self._log("Starting backup process")
-            
-            # Generate backup filename
-            backup_filename = self._generate_backup_filename()
-            self.backup_filename = backup_filename
-            
-            # Create backup file
-            backup_file_path = self._create_backup_file()
 
-            # Get backup file size in MB
+        # Safety net: remove leftover temp dirs from previous runs that were
+        # killed (SIGKILL/OOM/restart) before their own finally could run.
+        # Runs before we allocate this run's temp dir so a wedged /tmp from
+        # an earlier failure gets a chance to free space.
+        self._cleanup_stale_temp_files()
+
+        self._log("Starting backup process")
+
+        # Generate backup filename (no I/O, safe before mkdtemp)
+        self.backup_filename = self._generate_backup_filename()
+
+        # Allocate the temp dir up front so the outer finally always owns it.
+        # Previously this was created inside _create_backup_file, so if that
+        # method raised before returning, the outer finally saw temp_dir=None
+        # and only the inner except (with ignore_errors=True) ran — silently
+        # swallowing any cleanup failure.
+        temp_dir = tempfile.mkdtemp(prefix='odoo_backup_')
+        try:
+            # Create backup file inside our temp dir
+            backup_file_path = self._create_backup_file(temp_dir)
+
+            # Get backup file size and store as MB with sub-MB precision (Float)
             size_bytes = os.path.getsize(backup_file_path)
-            self.backup_size_mb = int(size_bytes / (1024 * 1024))  # Convert bytes to MB
+            self.backup_size_mb = size_bytes / (1024 * 1024)
             self._log(f"Backup file created: {backup_file_path} ({tools.human_size(size_bytes)})")
 
             # Verify backup integrity if enabled
             if self.config_id.verify_backups:
                 self._verify_backup_integrity(backup_file_path)
-            
+
             # Upload to storage providers
             provider_results = self._upload_to_providers(backup_file_path)
             self.provider_results = self._serialize_provider_results(provider_results)
-            
-            # Clean up local backup file
-            try:
-                os.remove(backup_file_path)
-                self._log("Local backup file cleaned up")
-            except Exception as e:
-                self._log(f"Warning: Failed to clean up local backup file: {e}")
-            
+
             # Determine final status
             successful_uploads = sum(1 for r in provider_results.values() if r.get('success'))
             total_providers = len(self.config_id.all_providers)
-            
+
             if successful_uploads == 0:
                 # All uploads failed
                 self.status = 'error'
@@ -215,10 +251,10 @@ class BackupJob(models.Model):
                 # All uploads succeeded
                 self.status = 'success'
                 success = True
-            
+
             self.end_time = fields.Datetime.now()
             self._log(f"Backup process completed with status: {self.status}")
-            
+
             return {
                 'success': success,
                 'message': self.error_message or 'Backup completed successfully',
@@ -226,16 +262,23 @@ class BackupJob(models.Model):
                 'provider_results': provider_results
             }
         except Exception as e:
+            error_message = self._format_backup_error(e)
             self.status = 'error'
             self.end_time = fields.Datetime.now()
-            self.error_message = str(e)
-            self._log(f"Backup process failed: {e}")
-            
+            self.error_message = error_message
+            self._log(f"Backup process failed: {error_message}")
+
             return {
                 'success': False,
-                'message': str(e),
+                'message': error_message,
                 'backup_job': self
             }
+        finally:
+            # Always clean up the temporary directory and its contents.
+            # Uses _safe_rmtree so a failure to remove is logged (not silently
+            # swallowed by ignore_errors=True) but never masks the original
+            # exception by re-raising.
+            self._safe_rmtree(temp_dir, label='backup temp dir')
     
     def _generate_backup_filename(self):
         """Generate backup filename based on template."""
@@ -268,27 +311,46 @@ class BackupJob(models.Model):
         filename = filename.strip('_')
         return filename
     
-    def _create_backup_file(self):
-        """Create the actual backup file."""
+    def _create_backup_file(self, temp_dir):
+        """Create the actual backup file inside `temp_dir`.
+
+        The caller owns `temp_dir` and is responsible for its cleanup (see
+        _process_backup), so this method does not create or remove it.
+        """
         self._log(f"Creating {self.backup_format.upper()} backup of database: {self.database_name}")
-        
-        # Create temporary file
-        temp_dir = tempfile.mkdtemp(prefix='odoo_backup_')
+
         backup_file_path = os.path.join(temp_dir, self.backup_filename)
-        
         try:
             with open(backup_file_path, 'wb') as backup_file:
                 self._create_database_dump(backup_file)
-            
+
             self._log(f"Backup file created successfully: {backup_file_path}")
             return backup_file_path
         except Exception as e:
-            # Clean up temp directory on error
-            try:
-                shutil.rmtree(temp_dir)
-            except:
-                pass
-            raise UserError(f"Failed to create backup file: {e}")
+            raise UserError(f"Failed to create backup file: {self._format_backup_error(e)}")
+
+    @staticmethod
+    def _format_backup_error(e):
+        """Produce a concise, human-readable message for backup errors.
+
+        `shutil.copytree` raises `shutil.Error` with a list of per-file
+        (src, dst, why) tuples — stringifying it dumps the whole list into
+        the email body. Detect common root causes (disk full, permissions)
+        and fall back to a length-capped string for everything else.
+        """
+        msg = str(e)
+        if 'No space left on device' in msg or 'Errno 28' in msg:
+            return ("No space left on device while writing temporary files. "
+                    "Free up disk space (typically on /tmp) and retry.")
+        if 'Permission denied' in msg or 'Errno 13' in msg:
+            return ("Permission denied while writing temporary files. "
+                    "Check that the Odoo user can write to /tmp and to the "
+                    "configured local backup paths.")
+        # Generic fallback: cap length so the email stays readable
+        max_len = 500
+        if len(msg) > max_len:
+            return msg[:max_len] + ' … (message truncated)'
+        return msg
     
     def _create_database_dump(self, stream):
         """
@@ -354,19 +416,28 @@ class BackupJob(models.Model):
         env = exec_pg_environ()
 
         if backup_format == 'zip':
-            with tempfile.TemporaryDirectory() as dump_dir:
-                # Copy filestore
-                filestore = odoo.tools.config.filestore(db_name)
-                if os.path.exists(filestore):
-                    shutil.copytree(filestore, os.path.join(dump_dir, 'filestore'))
-
+            # Manual mkdtemp + try/finally instead of `with TemporaryDirectory()`:
+            # if rmtree fails (e.g. disk full mid-write leaves partial state),
+            # TemporaryDirectory.__exit__ swallows the rmtree error and leaks
+            # the directory under /tmp. _safe_rmtree logs the failure reason,
+            # then retries with ignore_errors so we still clean up what we can.
+            #
+            # The temp dir holds only dump.sql + manifest.json (small). The
+            # filestore is streamed straight into the archive from its live
+            # location by _write_backup_zip — we do NOT copy it here first.
+            # Odoo's stock dump_db copies the filestore into the temp dir before
+            # zipping, which makes it exist twice on disk at peak (a full copy
+            # under /tmp *and* inside the growing zip). On a shared/contended
+            # disk that doubled footprint is exactly what runs /tmp out of space.
+            dump_dir = tempfile.mkdtemp(prefix='odoo_backup_dump_')
+            try:
                 # Generate manifest
                 with open(os.path.join(dump_dir, 'manifest.json'), 'w') as fh:
                     db = odoo.sql_db.db_connect(db_name)
                     with db.cursor() as cr:
                         json.dump(self._dump_db_manifest(cr), fh, indent=4)
 
-                # Run pg_dump
+                # Run pg_dump -> dump.sql (kept in the temp dir)
                 cmd.insert(-1, '--file=' + os.path.join(dump_dir, 'dump.sql'))
                 subprocess.run(
                     cmd, env=env,
@@ -375,11 +446,10 @@ class BackupJob(models.Model):
                     check=True,
                 )
 
-                # Write ZIP to stream
-                osutil.zip_dir(
-                    dump_dir, stream, include_dir=False,
-                    fnct_sort=lambda file_name: file_name != 'dump.sql',
-                )
+                # Build the zip directly into the output stream
+                self._write_backup_zip(stream, dump_dir, db_name)
+            finally:
+                self._safe_rmtree(dump_dir, label='dump_dir')
         else:
             cmd.insert(-1, '--format=c')
             stdout = subprocess.Popen(
@@ -388,6 +458,60 @@ class BackupJob(models.Model):
                 stdout=subprocess.PIPE,
             ).stdout
             shutil.copyfileobj(stdout, stream)
+
+    def _write_backup_zip(self, stream, dump_dir, db_name):
+        """Write a restore-compatible backup zip into *stream*.
+
+        Layout matches Odoo's ``dump_db`` exactly so the archive restores
+        through the standard path: ``dump.sql`` first (so a restore can read it
+        without scanning the whole archive — the ordering Odoo's ``fnct_sort``
+        guarantees), then ``manifest.json``, then the filestore under
+        ``filestore/``. Unlike ``dump_db`` the filestore is read from its live
+        location instead of a temp copy.
+
+        Compression strategy: dump.sql and manifest.json are DEFLATEd (text,
+        compresses well). Filestore entries are STOREd: attachments are
+        already-compressed binaries (images, PDFs, ...) where DEFLATE costs a
+        lot of CPU for negligible size gain — enough that on a large filestore
+        the cron worker burns through its ``limit_time_cpu`` (default 600s)
+        mid-archive and gets SIGKILL'd before any commit, leaving no job
+        record and no failure email. zipfile reads both methods transparently
+        on restore, so this is purely a cost-side change.
+
+        allowZip64 is mandatory: real filestores routinely exceed the 4 GiB
+        ZIP32 limit.
+        """
+        filestore = odoo.tools.config.filestore(db_name)
+        with zipfile.ZipFile(
+            stream, 'w', compression=zipfile.ZIP_STORED, allowZip64=True,
+        ) as zf:
+            zf.write(
+                os.path.join(dump_dir, 'dump.sql'), 'dump.sql',
+                compress_type=zipfile.ZIP_DEFLATED,
+            )
+            zf.write(
+                os.path.join(dump_dir, 'manifest.json'), 'manifest.json',
+                compress_type=zipfile.ZIP_DEFLATED,
+            )
+            if not os.path.exists(filestore):
+                return
+            for dirpath, _dirnames, filenames in os.walk(filestore):
+                for fname in filenames:
+                    fpath = os.path.join(dirpath, fname)
+                    arcname = os.path.join(
+                        'filestore', os.path.relpath(fpath, filestore),
+                    )
+                    try:
+                        zf.write(fpath, arcname)
+                    except FileNotFoundError:
+                        # The attachment was unlinked (gc/vacuum) between
+                        # os.walk listing it and us reading it. It is no longer
+                        # referenced, so skipping keeps the archive consistent
+                        # with the freshly dumped database.
+                        _logger.warning(
+                            "Skipping filestore file removed mid-backup: %s",
+                            fpath,
+                        )
     
     def _verify_backup_integrity(self, backup_file_path):
         """Verify backup file integrity."""
@@ -512,7 +636,64 @@ class BackupJob(models.Model):
         
         # Also log to system logger
         _logger.info("Backup Job %d: %s", self.id, message)
-    
+
+    @staticmethod
+    def _safe_rmtree(path, label='temp dir'):
+        """Remove a directory tree, logging the reason if it can't be fully
+        removed, then retrying with ignore_errors=True so we never leave
+        behind a partially-cleaned path *and* never mask the original
+        exception by re-raising from a finally block.
+        """
+        if not path or not os.path.exists(path):
+            return
+        try:
+            shutil.rmtree(path)
+        except Exception as e:
+            _logger.warning(
+                "Could not fully remove %s %s: %s — retrying with ignore_errors",
+                label, path, e,
+            )
+            shutil.rmtree(path, ignore_errors=True)
+            if os.path.exists(path):
+                _logger.error("Leaked %s: %s still exists after cleanup", label, path)
+
+    @classmethod
+    def _cleanup_stale_temp_files(cls, max_age_seconds=2 * 3600):
+        """Sweep the system temp dir for leftover backup temp dirs older than
+        max_age_seconds and remove them.
+
+        This is the safety net for cases the per-run try/finally can't cover:
+        the worker getting SIGKILL'd by the OOM killer, an Odoo restart in
+        the middle of a long filestore copy, or shutil.rmtree silently
+        failing under disk pressure with ignore_errors=True.
+
+        The age threshold protects any concurrent backup that is legitimately
+        still in progress — backups in this module never run for hours.
+        """
+        tmp_root = tempfile.gettempdir()
+        cutoff = time.time() - max_age_seconds
+        removed = []
+        for prefix in cls._TEMP_DIR_PREFIXES:
+            for path in glob.glob(os.path.join(tmp_root, prefix + '*')):
+                try:
+                    if os.path.getmtime(path) >= cutoff:
+                        continue  # likely an in-progress backup, leave it
+                    if os.path.isdir(path):
+                        shutil.rmtree(path, ignore_errors=True)
+                    else:
+                        os.unlink(path)
+                    if not os.path.exists(path):
+                        removed.append(path)
+                except Exception as e:
+                    _logger.warning(
+                        "Could not remove stale backup temp path %s: %s", path, e,
+                    )
+        if removed:
+            _logger.info(
+                "Backup temp sweep removed %d stale path(s): %s",
+                len(removed), ', '.join(removed),
+            )
+
     def retry_backup(self):
         """Retry a failed backup job."""
         self.ensure_one()
