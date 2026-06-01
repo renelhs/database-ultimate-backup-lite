@@ -11,7 +11,7 @@
                 <field name="database_name"/>
                 <field name="backup_format"/>
                 <field name="start_time"/>
-                <field name="duration" widget="float_time"/>
+                <field name="duration_human"/>
                 <field name="backup_size_human"/>
                 <field name="verification_status" widget="badge" decoration-success="verification_status == 'verified'" decoration-danger="verification_status == 'failed'"/>
                 <field name="status" widget="badge" decoration-success="status == 'success'" decoration-danger="status == 'error'" decoration-warning="status in ('running', 'warning')" decoration-info="status == 'pending'"/>
@@ -45,7 +45,8 @@
                         <group string="Timing">
                             <field name="start_time"/>
                             <field name="end_time"/>
-                            <field name="duration" widget="float_time"/>
+                            <field name="duration_human"/>
+                            <field name="duration" widget="float" string="Duration (s)"/>
                         </group>
                     </group>
                     

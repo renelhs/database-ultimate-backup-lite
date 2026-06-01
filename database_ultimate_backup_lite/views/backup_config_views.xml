@@ -95,8 +95,8 @@
                             <field name="backup_job_ids" readonly="1">
                                 <list limit="10">
                                     <field name="start_time"/>
-                                    <field name="status" decoration-success="status == 'completed'" decoration-danger="status == 'failed'"/>
-                                    <field name="duration"/>
+                                    <field name="status" decoration-success="status == 'success'" decoration-danger="status == 'error'"/>
+                                    <field name="duration_human"/>
                                     <field name="backup_size_human"/>
                                 </list>
                             </field>
