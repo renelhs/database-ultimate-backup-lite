@@ -645,11 +645,41 @@
                              class="tab-pane fade show" id="releases"
                              role="tabpanel">
 
-                            <!-- Version 19.0.1.1.0 -->
+                            <!-- Version 19.0.1.2.0 -->
                             <div class="row pt-5 m-0">
                                 <div class="col-md-3">
                                     <h4 style="font-size:16px; font-weight:600; color:#514F4F; margin:0; line-height:26px;">
-                                        Latest Release 19.0.1.1.0
+                                        Latest Release 19.0.1.2.0
+                                    </h4>
+                                    <span style="font-size:14px; color:#7A7979; display:block; margin-bottom:20px;">
+                                        June 01, 2026
+                                    </span>
+                                </div>
+                                <div class="col-md-8">
+                                    <div style="padding:0 0 40px">
+                                        <div style="margin:0 0 10px">
+                                            <div style="display:inline-block; padding:4px 12px; color:#fff; background-color:#17a2b8; border-radius:20px; margin-right: 8px;">
+                                                Improved
+                                            </div>
+                                        </div>
+                                        <div class="d-flex m-0" style="color:#7A7979;">
+                                            <ul class="pl-3 mb-0">
+                                                <li><strong>Large-database performance</strong> - Filestore is streamed straight into the archive (no temp copy), avoiding doubled disk usage on <code>/tmp</code></li>
+                                                <li><strong>Lower CPU usage</strong> - Smarter compression prevents long backups from being killed mid-archive on big filestores (4GB+ supported)</li>
+                                                <li>Hourly safety sweep removes leftover temp files after crashes or restarts</li>
+                                                <li>Clearer error messages (disk full, permissions) and human-readable backup duration</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div style="padding:0 0 0; border-bottom:1px solid #E3E3E3"></div>
+                                </div>
+                            </div>
+
+                            <!-- Version 19.0.1.1.0 -->
+                            <div class="row pt-3 m-0">
+                                <div class="col-md-3">
+                                    <h4 style="font-size:16px; font-weight:600; color:#514F4F; margin:0; line-height:26px;">
+                                        Version 19.0.1.1.0
                                     </h4>
                                     <span style="font-size:14px; color:#7A7979; display:block; margin-bottom:20px;">
                                         February 10, 2026
@@ -726,19 +756,86 @@
                         <h2 style="margin: 0 0 15px 0; color: #667eea; font-size: 32px; font-weight: 700;">
                             Need Multi-Cloud Storage?
                         </h2>
-                        <p style="font-size: 1.1em; margin: 10px 0; color: #64728f;">
-                            Upgrade to <a href="https://apps.odoo.com/apps/modules/19.0/database_ultimate_backup" target="_blank" style="color: #667eea; font-weight: 700; text-decoration: underline;"><strong>Database Ultimate Backup</strong></a> (Full Edition) for enterprise-grade multi-cloud support:
+                        <p style="font-size: 1.1em; margin: 10px 0 25px; color: #64728f;">
+                            This <strong>Lite</strong> edition is free and fully functional for local &amp; SFTP backups.
+                            Upgrade to <a href="https://apps.odoo.com/apps/modules/19.0/database_ultimate_backup" target="_blank" style="color: #667eea; font-weight: 700; text-decoration: underline;"><strong>Database Ultimate Backup</strong></a> (Full Edition) when you need multi-cloud storage, a real-time dashboard and team alerts.
                         </p>
-                        <table style="margin: 0 auto; border-collapse: separate; border-spacing: 10px;">
-                            <tr>
-                                <td style="background-color: #667eea; color: #ffffff; padding: 8px 16px; border-radius: 20px; font-weight: 600;">AWS S3</td>
-                                <td style="background-color: #667eea; color: #ffffff; padding: 8px 16px; border-radius: 20px; font-weight: 600;">Azure Blob</td>
-                                <td style="background-color: #667eea; color: #ffffff; padding: 8px 16px; border-radius: 20px; font-weight: 600;">Google Cloud</td>
-                                <td style="background-color: #667eea; color: #ffffff; padding: 8px 16px; border-radius: 20px; font-weight: 600;">DigitalOcean</td>
-                                <td style="background-color: #667eea; color: #ffffff; padding: 8px 16px; border-radius: 20px; font-weight: 600;">Parallel Uploads</td>
-                                <td style="background-color: #667eea; color: #ffffff; padding: 8px 16px; border-radius: 20px; font-weight: 600;">Server-side Encryption</td>
-                            </tr>
+                        <table style="width: 100%; max-width: 720px; margin: 0 auto; border-collapse: collapse; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">
+                            <thead>
+                                <tr style="background-color: #f1f3f9;">
+                                    <th style="text-align: left; padding: 14px 16px; color: #333; font-size: 15px;">Feature</th>
+                                    <th style="text-align: center; padding: 14px 16px; color: #555; font-size: 15px; width: 110px;">Lite<br><span style="font-weight: 400; font-size: 12px; color: #28a745;">Free</span></th>
+                                    <th style="text-align: center; padding: 14px 16px; color: #ffffff; background-color: #667eea; font-size: 15px; width: 110px;">Pro<br><span style="font-weight: 400; font-size: 12px; color: #e6e9ff;">Full Edition</span></th>
+                                </tr>
+                            </thead>
+                            <tbody style="color: #4a4a4a; font-size: 14px;">
+                                <tr style="border-top: 1px solid #eee;">
+                                    <td style="text-align: left; padding: 12px 16px;">Local filesystem storage</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #28a745; font-weight: 700;">&#10004;</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #28a745; font-weight: 700;">&#10004;</td>
+                                </tr>
+                                <tr style="border-top: 1px solid #eee; background: #fafbff;">
+                                    <td style="text-align: left; padding: 12px 16px;">SFTP / SSH remote storage</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #28a745; font-weight: 700;">&#10004;</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #28a745; font-weight: 700;">&#10004;</td>
+                                </tr>
+                                <tr style="border-top: 1px solid #eee;">
+                                    <td style="text-align: left; padding: 12px 16px;">Scheduled &amp; automated backups</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #28a745; font-weight: 700;">&#10004;</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #28a745; font-weight: 700;">&#10004;</td>
+                                </tr>
+                                <tr style="border-top: 1px solid #eee; background: #fafbff;">
+                                    <td style="text-align: left; padding: 12px 16px;">Retention policies (count &amp; time)</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #28a745; font-weight: 700;">&#10004;</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #28a745; font-weight: 700;">&#10004;</td>
+                                </tr>
+                                <tr style="border-top: 1px solid #eee;">
+                                    <td style="text-align: left; padding: 12px 16px;">Backup integrity verification</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #28a745; font-weight: 700;">&#10004;</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #28a745; font-weight: 700;">&#10004;</td>
+                                </tr>
+                                <tr style="border-top: 1px solid #eee; background: #fafbff;">
+                                    <td style="text-align: left; padding: 12px 16px;">Large-database optimized (streaming, low CPU)</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #28a745; font-weight: 700;">&#10004;</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #28a745; font-weight: 700;">&#10004;</td>
+                                </tr>
+                                <tr style="border-top: 1px solid #eee;">
+                                    <td style="text-align: left; padding: 12px 16px;">Email notifications</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #28a745; font-weight: 700;">&#10004;</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #28a745; font-weight: 700;">&#10004;</td>
+                                </tr>
+                                <tr style="border-top: 1px solid #eee; background: #fafbff;">
+                                    <td style="text-align: left; padding: 12px 16px;">Cloud storage &#8212; AWS S3, Azure, Google Cloud, Google Drive, DigitalOcean</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #c0c0c0;">&#10006;</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #28a745; font-weight: 700;">&#10004;</td>
+                                </tr>
+                                <tr style="border-top: 1px solid #eee;">
+                                    <td style="text-align: left; padding: 12px 16px;">Server-side encryption &amp; storage classes</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #c0c0c0;">&#10006;</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #28a745; font-weight: 700;">&#10004;</td>
+                                </tr>
+                                <tr style="border-top: 1px solid #eee; background: #fafbff;">
+                                    <td style="text-align: left; padding: 12px 16px;">Parallel multi-provider uploads</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #c0c0c0;">&#10006;</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #28a745; font-weight: 700;">&#10004;</td>
+                                </tr>
+                                <tr style="border-top: 1px solid #eee;">
+                                    <td style="text-align: left; padding: 12px 16px;">Real-time dashboard (KPIs, graph &amp; pivot)</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #c0c0c0;">&#10006;</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #28a745; font-weight: 700;">&#10004;</td>
+                                </tr>
+                                <tr style="border-top: 1px solid #eee; background: #fafbff;">
+                                    <td style="text-align: left; padding: 12px 16px;">Team alerts &#8212; Slack, Teams, Telegram, Webhook</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #c0c0c0;">&#10006;</td>
+                                    <td style="text-align: center; padding: 12px 16px; color: #28a745; font-weight: 700;">&#10004;</td>
+                                </tr>
+                            </tbody>
                         </table>
+                        <div style="margin-top: 28px;">
+                            <a href="https://apps.odoo.com/apps/modules/19.0/database_ultimate_backup" target="_blank" style="display: inline-block; background-color: #667eea; color: #ffffff; padding: 14px 32px; border-radius: 6px; font-weight: 700; font-size: 16px; text-decoration: none;">
+                                Upgrade to Pro &#8594;
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -764,7 +861,7 @@
 
 <div class="footer" style="text-align: center; padding: 40px 20px; color: #777; font-size: 0.9em; background: #f9f9f9; margin-top: 40px;">
     <p style="margin: 5px 0;"><strong>Database Ultimate Backup Lite for Odoo 19.0</strong></p>
-    <p style="margin: 5px 0;">Version 1.1.0 | Licensed under MIT | Free</p>
+    <p style="margin: 5px 0;">Version 1.2.0 | Licensed under MIT | Free</p>
     <p style="margin: 5px 0;">Developed by René Hechavarría</p>
     <p style="margin-top: 15px; font-style: italic;">
         Free local &amp; SFTP backup solution with automated scheduling,
