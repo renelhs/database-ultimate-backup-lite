@@ -366,14 +366,25 @@ class BackupJob(models.Model):
         ``odoo.service.db.dump_db`` logic without the
         ``@check_db_management_enabled`` decorator.  This allows backups
         to work even when ``list_db = False`` is set in odoo.conf.
+
+        Security note: because this bypasses ``@check_db_management_enabled``,
+        a full database dump can be produced even when the administrator has
+        disabled web database management via ``list_db = False``. Authorization
+        is therefore enforced here against backup-admin group membership (see
+        the check below) rather than relying on Odoo's db-management gate.
         """
-        # Security check - ensure we're running from the backup system or manual backup
+        # Authorization check: a database dump is a full export of the data and
+        # must be restricted to the backup system (cron) or a backup
+        # administrator. We verify group membership explicitly here instead of
+        # trusting ``is_manual``, which is a caller-controlled context flag
+        # (defaults to True) and provides no real authorization. ``is_manual``
+        # is kept purely as audit metadata on the job.
         cron_user = self.env.ref('database_ultimate_backup_lite.backup_cron').user_id
         is_cron_user = self.env.user.id == cron_user.id
-        is_manual_backup = self.is_manual
+        is_backup_admin = self.env.user.has_group('database_ultimate_backup_lite.group_backup_admin')
 
-        if not is_cron_user and not is_manual_backup:
-            raise AccessDenied("Database dumps can only be created by the backup system or as manual backups")
+        if not is_cron_user and not is_backup_admin:
+            raise AccessDenied("Database dumps require backup administrator rights")
 
         self._log(f"Creating {self.backup_format} dump of database: {self.database_name}")
 

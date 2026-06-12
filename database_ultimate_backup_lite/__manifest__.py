@@ -34,9 +34,23 @@
 
         Security Features
         -----------------
-        * Two-tier access control: User and Administrator roles
+        * Two-tier access control: User and Administrator roles. Creating a
+          database dump requires the Backup Administrator group (or the backup
+          cron user); read-only Backup Users cannot trigger dumps.
         * Secure credential storage
         * Granular model-level permissions
+
+        Security Note: list_db and database dumps
+        -----------------------------------------
+        To keep scheduled backups working when web database management is
+        disabled, this module performs its dump using an internal routine that
+        intentionally does NOT apply Odoo's ``@check_db_management_enabled``
+        gate. As a result, a full database dump can still be produced even when
+        ``list_db = False`` is set in ``odoo.conf``. Access is instead enforced
+        by requiring the Backup Administrator group, so setting
+        ``list_db = False`` alone is not sufficient to prevent dumps via this
+        module — restrict membership of the backup administrator group
+        accordingly.
 
         Need Multi-Cloud Storage?
         -------------------------
@@ -51,7 +65,7 @@
     'support': "reneluishs@gmail.com",
 
     'category': 'Administration',
-    'version': '19.0.1.4.0',
+    'version': '19.0.1.4.1',
 
     # Module dependencies
     'depends': ['base'],
