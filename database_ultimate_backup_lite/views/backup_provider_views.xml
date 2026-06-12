@@ -119,6 +119,9 @@
             <form string="SFTP Storage Provider">
                 <header>
                     <button name="test_connection_action" type="object" string="Test Connection" class="btn-secondary"/>
+                    <button name="action_reset_host_key" type="object" string="Reset Pinned Host Key" class="btn-secondary"
+                            invisible="not server_host_key"
+                            confirm="Only reset the pinned host key if the SFTP server was legitimately reinstalled or migrated. If you are not sure why the host key changed, do NOT reset it and investigate first. Continue?"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -149,6 +152,11 @@
                             <group>
                                 <group string="Directory Settings">
                                     <field name="create_remote_dirs"/>
+                                </group>
+                                <group string="Host Key Security">
+                                    <field name="verify_host_key"/>
+                                    <field name="host_key_fingerprint"/>
+                                    <field name="server_host_key" invisible="1"/>
                                 </group>
                             </group>
                         </page>
