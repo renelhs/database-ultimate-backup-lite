@@ -76,6 +76,12 @@
                                     <field name="notification_emails" placeholder="email1@example.com, email2@example.com"/>
                                 </group>
                             </group>
+                            <div class="alert alert-info mt-2" role="alert">
+                                <i class="fa fa-bell-o me-1" role="img" aria-label="Alerts"/>
+                                Slack, Microsoft Teams, Telegram and webhook alerts are available in the
+                                <a href="https://apps.odoo.com/apps/modules/19.0/database_ultimate_backup"
+                                   target="_blank" rel="noopener noreferrer">Full Edition</a>.
+                            </div>
                         </page>
 
                         <page string="Statistics">

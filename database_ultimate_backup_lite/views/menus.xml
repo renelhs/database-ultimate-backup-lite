@@ -22,6 +22,13 @@
         />
 
         <menuitem
+            id="menu_backup_dashboard_teaser"
+            name="Dashboard (Full)"
+            action="action_teaser_dashboard"
+            sequence="25"
+        />
+
+        <menuitem
             id="menu_storage_providers"
             name="Storage Providers"
             sequence="30">
@@ -38,6 +45,42 @@
                 name="SFTP Storage"
                 action="action_backup_provider_sftp"
                 sequence="20"
+            />
+
+            <!-- Cloud destinations available only in the Full edition -->
+            <menuitem
+                id="menu_provider_aws_s3_teaser"
+                name="Amazon S3 (Full)"
+                action="action_teaser_aws_s3"
+                sequence="30"
+            />
+
+            <menuitem
+                id="menu_provider_do_spaces_teaser"
+                name="DigitalOcean Spaces (Full)"
+                action="action_teaser_do_spaces"
+                sequence="40"
+            />
+
+            <menuitem
+                id="menu_provider_azure_teaser"
+                name="Azure Blob Storage (Full)"
+                action="action_teaser_azure"
+                sequence="50"
+            />
+
+            <menuitem
+                id="menu_provider_gcs_teaser"
+                name="Google Cloud Storage (Full)"
+                action="action_teaser_gcs"
+                sequence="60"
+            />
+
+            <menuitem
+                id="menu_provider_gdrive_teaser"
+                name="Google Drive (Full)"
+                action="action_teaser_gdrive"
+                sequence="70"
             />
 
         </menuitem>

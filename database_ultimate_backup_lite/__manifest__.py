@@ -51,7 +51,7 @@
     'support': "reneluishs@gmail.com",
 
     'category': 'Administration',
-    'version': '19.0.1.3.0',
+    'version': '19.0.1.4.0',
 
     # Module dependencies
     'depends': ['base'],
@@ -75,6 +75,7 @@
         'views/backup_config_views.xml',
         'views/backup_job_views.xml',
         'views/backup_provider_views.xml',
+        'views/backup_upgrade_teaser_views.xml',
         'views/menus.xml'
     ],
 
