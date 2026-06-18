@@ -89,6 +89,33 @@ class BackupProviderSftp(models.Model):
         help='Maximum number of concurrent file transfers (AsyncSSH feature)'
     )
 
+    # Host key security (trust on first use)
+    verify_host_key = fields.Boolean(
+        string='Verify Server Host Key',
+        default=True,
+        help='Pin the server host key on the first successful connection and '
+             'verify it on every connection after that (trust on first use). '
+             'Disable only for testing: without verification, connections are '
+             'vulnerable to man-in-the-middle attacks.'
+    )
+    server_host_key = fields.Text(
+        string='Pinned Server Host Key',
+        readonly=True,
+        copy=False,
+        help='Public host key of the SFTP server, captured automatically on '
+             'the first successful connection. Later connections must present '
+             'the same key. Use "Reset Pinned Host Key" if the server was '
+             'legitimately reinstalled or migrated.'
+    )
+    host_key_fingerprint = fields.Char(
+        string='Host Key Fingerprint',
+        readonly=True,
+        copy=False,
+        help='SHA-256 fingerprint of the pinned server host key. Compare it '
+             'with the output of "ssh-keyscan <hostname>" on a trusted '
+             'machine to confirm you are talking to the right server.'
+    )
+
     # Override abstract methods
     def test_connection(self):
         """Test SFTP connection and permissions."""
@@ -107,7 +134,7 @@ class BackupProviderSftp(models.Model):
 
             return result
         except Exception as e:
-            error_msg = "Connection test failed: %s" % str(e)
+            error_msg = "Connection test failed: %s" % self._describe_connection_error(e)
 
             return {
                 'success': False,
@@ -127,6 +154,9 @@ class BackupProviderSftp(models.Model):
                 username=self.username,
                 **connect_options
             ) as conn:
+
+                # Pin the server host key on the first successful connection
+                pinned_fingerprint = self._pin_server_host_key(conn)
 
                 # Test SFTP subsystem
                 async with conn.start_sftp_client() as sftp:
@@ -163,10 +193,22 @@ class BackupProviderSftp(models.Model):
                     except:
                         server_info = "SSH server (version unknown)"
 
+                    if pinned_fingerprint:
+                        host_key_status = (
+                            "Host key pinned: %s\n"
+                            "Verify it matches your server: ssh-keyscan %s"
+                            % (pinned_fingerprint, self.hostname)
+                        )
+                    elif self.verify_host_key and self.server_host_key:
+                        host_key_status = "Host key verified: %s" % self.host_key_fingerprint
+                    else:
+                        host_key_status = "Host key verification: DISABLED (not recommended)"
+
                     message = (
                         f"{directory_status}\n"
                         f"{write_status}\n"
                         f"Server: {server_info}\n"
+                        f"{host_key_status}\n"
                         f"Connection: Successful"
                     )
 
@@ -199,7 +241,7 @@ class BackupProviderSftp(models.Model):
         except Exception as e:
             return {
                 'success': False,
-                'message': "Upload failed: %s" % str(e),
+                'message': "Upload failed: %s" % self._describe_connection_error(e),
                 'metadata': {}
             }
 
@@ -213,6 +255,9 @@ class BackupProviderSftp(models.Model):
             username=self.username,
             **connect_options
         ) as conn:
+            # Pin the server host key if this is the first connection
+            self._pin_server_host_key(conn)
+
             async with conn.start_sftp_client() as sftp:
 
                 # Ensure remote directory exists
@@ -267,7 +312,7 @@ class BackupProviderSftp(models.Model):
         except Exception as e:
             return {
                 'success': False,
-                'message': "Download failed: %s" % str(e)
+                'message': "Download failed: %s" % self._describe_connection_error(e)
             }
 
     async def _async_download_backup(self, remote_filename, local_path):
@@ -381,7 +426,7 @@ class BackupProviderSftp(models.Model):
         except Exception as e:
             return {
                 'success': False,
-                'message': "Delete failed: %s" % str(e)
+                'message': "Delete failed: %s" % self._describe_connection_error(e)
             }
 
     async def _async_delete_backup(self, remote_filename):
@@ -466,20 +511,101 @@ class BackupProviderSftp(models.Model):
                     'storage_path': f"{self.hostname}:{self.remote_directory}",
                 }
 
+    def action_reset_host_key(self):
+        """Forget the pinned host key (e.g. after a legitimate server migration)."""
+        self.ensure_one()
+        self.write({
+            'server_host_key': False,
+            'host_key_fingerprint': False,
+        })
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Pinned host key removed',
+                'message': (
+                    'The next successful connection to %s will pin the new '
+                    'server host key. Run "Test Connection" now to pin it.'
+                    % self.hostname
+                ),
+                'type': 'warning',
+                'sticky': False,
+            }
+        }
+
     # Private utility methods
     def _get_connection_options(self):
         """Get connection options for AsyncSSH."""
         options = {
             'connect_timeout': self.connection_timeout,
-            # Disable strict host key checking to avoid "Host key is not trusted" errors
-            'known_hosts': None,
         }
+
+        if self.verify_host_key and self.server_host_key:
+            # Validate against the host key pinned on the first connection
+            host_pattern = (
+                self.hostname if self.port == 22
+                else '[%s]:%d' % (self.hostname, self.port)
+            )
+            options['known_hosts'] = asyncssh.import_known_hosts(
+                '%s %s' % (host_pattern, self.server_host_key.strip())
+            )
+        else:
+            # First connection (the key gets pinned right after it succeeds,
+            # trust on first use) or verification explicitly disabled
+            options['known_hosts'] = None
 
         # Authentication
         if self.password:
             options['password'] = self.password
 
         return options
+
+    def _pin_server_host_key(self, conn):
+        """Pin the server host key on the first successful connection (TOFU).
+
+        Returns the key fingerprint when a key was just pinned, otherwise None.
+        """
+        if self.server_host_key or not self.verify_host_key:
+            return None
+
+        key = conn.get_server_host_key()
+        if not key:
+            return None
+
+        fingerprint = key.get_fingerprint()
+        self.write({
+            'server_host_key': key.export_public_key().decode().strip(),
+            'host_key_fingerprint': fingerprint,
+        })
+        _logger.info(
+            "Pinned SFTP host key for %s:%s (%s)",
+            self.hostname, self.port, fingerprint,
+        )
+        return fingerprint
+
+    def _describe_connection_error(self, error):
+        """Return a user-friendly error message.
+
+        Host key validation failures get explicit guidance instead of the raw
+        asyncssh error, because the right reaction (reset the pinned key vs.
+        investigate a possible attack) is not obvious to end users.
+        """
+        host_key_error = getattr(asyncssh, 'HostKeyNotVerifiable', None) if asyncssh else None
+        is_host_key_issue = (
+            (host_key_error is not None and isinstance(error, host_key_error))
+            or 'host key' in str(error).lower()
+        )
+        if is_host_key_issue and self.server_host_key:
+            return (
+                "SECURITY WARNING: the host key presented by %s:%s does not "
+                "match the key pinned on the first connection (fingerprint %s). "
+                "The connection was aborted. If the SFTP server was "
+                "legitimately reinstalled or migrated, use 'Reset Pinned Host "
+                "Key' on the provider and test the connection again. "
+                "Otherwise, this connection may be intercepted by an attacker."
+                % (self.hostname, self.port, self.host_key_fingerprint or 'unknown')
+            )
+        return str(error)
 
     def _is_backup_file(self, filename):
         """Check if filename is a backup file."""

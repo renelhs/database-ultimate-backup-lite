@@ -1,26 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="1">
-        <!-- Backup System Categories -->
-        <record id="module_category_backup" model="ir.module.category">
-            <field name="name">Database Backup</field>
-            <field name="description">Manage database backup system access</field>
-            <field name="sequence">20</field>
-        </record>
+    <!-- Category and groups (without noupdate so they refresh on upgrade) -->
+    <record id="module_category_backup" model="ir.module.category">
+        <field name="name">Database Backup</field>
+        <field name="description">Manage database backup system access</field>
+        <field name="sequence">20</field>
+    </record>
 
-        <!-- Backup User Group -->
-        <record id="group_backup_user" model="res.groups">
-            <field name="name">User</field>
-            <field name="category_id" ref="module_category_backup"/>
-            <field name="comment">Users can view backup configurations and jobs, but cannot create or modify them.</field>
-        </record>
+    <!-- Backup User Group -->
+    <record id="group_backup_user" model="res.groups">
+        <field name="name">User</field>
+        <field name="category_id" ref="module_category_backup"/>
+        <field name="comment">Users can view backup configurations and jobs, but cannot create or modify them.</field>
+    </record>
 
-        <!-- Backup Administrator Group -->
-        <record id="group_backup_admin" model="res.groups">
-            <field name="name">Administrator</field>
-            <field name="category_id" ref="module_category_backup"/>
-            <field name="implied_ids" eval="[(4, ref('group_backup_user'))]"/>
-            <field name="comment">Full access to backup system, including sensitive operations and system configuration.</field>
-        </record>
-    </data>
+    <!-- Backup Administrator Group -->
+    <record id="group_backup_admin" model="res.groups">
+        <field name="name">Administrator</field>
+        <field name="category_id" ref="module_category_backup"/>
+        <field name="implied_ids" eval="[(4, ref('group_backup_user'))]"/>
+        <!-- Root user always keeps backup admin rights -->
+        <field name="users" eval="[(4, ref('base.user_root'))]"/>
+        <field name="comment">Full access to backup system, including sensitive operations and system configuration.</field>
+    </record>
+
+    <!-- System administrators automatically get backup admin rights.
+         Odoo 18 has no res.groups.privilege / implied_by_ids, so we express
+         the same intent by making base.group_system imply backup admin. -->
+    <record id="base.group_system" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('group_backup_admin'))]"/>
+    </record>
+
+    <!-- Ensure the admin user has backup admin rights -->
+    <record id="base.user_admin" model="res.users">
+        <field name="groups_id" eval="[(4, ref('group_backup_admin'))]"/>
+    </record>
 </odoo>

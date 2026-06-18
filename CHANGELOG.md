@@ -5,6 +5,81 @@ All notable changes to the Database Ultimate Backup Lite module will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.0.1.2.0] - 2026-06-18
+
+Backport of the features and security hardening introduced on the Odoo 19.0
+line, adapted to Odoo 18.0.
+
+### Security
+
+- **SFTP host key verification (trust on first use)**: SFTP connections
+  previously ran with `known_hosts=None`, i.e. no server identity check at
+  all, leaving backups exposed to man-in-the-middle interception. The provider
+  now pins the server's public host key automatically on the first successful
+  connection and validates every subsequent connection against it — no extra
+  configuration or `known_hosts` file required, so first-time setup is
+  unchanged.
+- **Database dumps require backup administrator rights**: creating a database
+  dump is now authorized explicitly against Backup Administrator group
+  membership (or the backup cron user) instead of trusting the
+  caller-controlled `is_manual` flag. Because the dump intentionally bypasses
+  Odoo's `@check_db_management_enabled` gate (so scheduled backups keep working
+  when `list_db = False`), `list_db = False` alone does not prevent dumps via
+  this module — restrict the Backup Administrator group accordingly.
+
+### Added
+
+- **In-app discovery of cloud storage destinations**: the *Storage Providers*
+  menu now lists Amazon S3, DigitalOcean Spaces, Azure Blob Storage, Google
+  Cloud Storage and Google Drive (each marked *(Full)*). Opening one shows what
+  the destination offers in the Full edition — multi-cloud redundancy, parallel
+  uploads, server-side encryption and team alerts — with a link to learn more.
+- **Dashboard preview**: a new *Dashboard (Full)* entry describes the Full
+  edition's real-time monitoring dashboard (KPI tiles, 30-day success rate,
+  storage totals and trend charts).
+- **Notification options note**: the backup configuration's *Notifications* tab
+  now mentions that Slack, Microsoft Teams, Telegram and webhook alerts are
+  available in the Full edition, alongside the existing email notifications.
+- **`Verify Server Host Key` toggle** (default: enabled) on the SFTP provider,
+  plus a read-only **Host Key Fingerprint** (SHA-256) shown under
+  *Connection Settings → Host Key Security*. The fingerprint can be checked
+  against `ssh-keyscan <hostname>` run on a trusted machine.
+- **`Reset Pinned Host Key` button** (with confirmation) for the legitimate
+  case where the SFTP server was reinstalled or migrated and its host key
+  changed.
+- **Actionable host-key mismatch errors**: connection, upload, download and
+  delete operations now report an explicit security warning — including the
+  pinned fingerprint and the reset procedure — instead of the raw asyncssh
+  "Host key is not trusted" error.
+- **Test Connection** result now reports the host key status
+  (pinned / verified / verification disabled).
+
+### Fixed
+
+- **Stale-temp sweep could delete the working directory of a long-running
+  backup**: the hourly sweep (and the sweep at the start of every run)
+  removed any `/tmp/odoo_backup_*` dir older than 2 hours — including the
+  temp dir of a backup *still in progress* on a large database, corrupting
+  the archive mid-write with no error trail. Every temp dir now records its
+  owner process PID in a `.odoo_backup_owner` marker; the sweep only removes
+  dirs whose owner process is gone (SIGKILL, OOM, restart), so a backup can
+  legitimately run for many hours without being swept out from under the
+  worker. A 24-hour hard cap still bounds leakage in the pathological case
+  where a recycled PID matches an unrelated live process. Dirs created by
+  older versions of the module (no marker) keep the previous age-based
+  cleanup.
+
+### Notes
+
+- The cloud/dashboard/notification additions are purely informational. Every
+  existing Lite feature — local storage, SFTP, scheduling, retention and email
+  notifications — keeps working exactly as before, with no popups, reminders or
+  workflow interruptions.
+- Existing SFTP providers pin their server's key on the next successful
+  connection or backup run; no manual action is needed after upgrading.
+
+---
+
 ## [18.0.1.1.0] - 2026-06-01
 
 ### Reliability & Large-Database Performance

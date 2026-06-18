@@ -188,6 +188,11 @@ class BackupJob(models.Model):
     # safety sweep keys off these to avoid touching anything else.
     _TEMP_DIR_PREFIXES = ('odoo_backup_', 'odoo_backup_dump_')
 
+    # Marker file written inside every temp dir with the creating process
+    # PID, so the stale sweep can tell an in-progress backup (owner process
+    # alive) from the leftover of a killed worker (owner process gone).
+    _TEMP_OWNER_MARKER = '.odoo_backup_owner'
+
     def _process_backup(self):
         """
         Process the backup job.
@@ -216,6 +221,7 @@ class BackupJob(models.Model):
         # and only the inner except (with ignore_errors=True) ran — silently
         # swallowing any cleanup failure.
         temp_dir = tempfile.mkdtemp(prefix='odoo_backup_')
+        self._mark_temp_dir_owner(temp_dir)
         try:
             # Create backup file inside our temp dir
             backup_file_path = self._create_backup_file(temp_dir)
@@ -360,14 +366,25 @@ class BackupJob(models.Model):
         ``odoo.service.db.dump_db`` logic without the
         ``@check_db_management_enabled`` decorator.  This allows backups
         to work even when ``list_db = False`` is set in odoo.conf.
+
+        Security note: because this bypasses ``@check_db_management_enabled``,
+        a full database dump can be produced even when the administrator has
+        disabled web database management via ``list_db = False``. Authorization
+        is therefore enforced here against backup-admin group membership (see
+        the check below) rather than relying on Odoo's db-management gate.
         """
-        # Security check - ensure we're running from the backup system or manual backup
+        # Authorization check: a database dump is a full export of the data and
+        # must be restricted to the backup system (cron) or a backup
+        # administrator. We verify group membership explicitly here instead of
+        # trusting ``is_manual``, which is a caller-controlled context flag
+        # (defaults to True) and provides no real authorization. ``is_manual``
+        # is kept purely as audit metadata on the job.
         cron_user = self.env.ref('database_ultimate_backup_lite.backup_cron').user_id
         is_cron_user = self.env.user.id == cron_user.id
-        is_manual_backup = self.is_manual
+        is_backup_admin = self.env.user.has_group('database_ultimate_backup_lite.group_backup_admin')
 
-        if not is_cron_user and not is_manual_backup:
-            raise AccessDenied("Database dumps can only be created by the backup system or as manual backups")
+        if not is_cron_user and not is_backup_admin:
+            raise AccessDenied("Database dumps require backup administrator rights")
 
         self._log(f"Creating {self.backup_format} dump of database: {self.database_name}")
 
@@ -430,6 +447,7 @@ class BackupJob(models.Model):
             # under /tmp *and* inside the growing zip). On a shared/contended
             # disk that doubled footprint is exactly what runs /tmp out of space.
             dump_dir = tempfile.mkdtemp(prefix='odoo_backup_dump_')
+            self._mark_temp_dir_owner(dump_dir)
             try:
                 # Generate manifest
                 with open(os.path.join(dump_dir, 'manifest.json'), 'w') as fh:
@@ -658,26 +676,83 @@ class BackupJob(models.Model):
                 _logger.error("Leaked %s: %s still exists after cleanup", label, path)
 
     @classmethod
-    def _cleanup_stale_temp_files(cls, max_age_seconds=2 * 3600):
-        """Sweep the system temp dir for leftover backup temp dirs older than
-        max_age_seconds and remove them.
+    def _mark_temp_dir_owner(cls, path):
+        """Write the creating process PID into the temp dir (owner marker).
+
+        The stale sweep uses this to protect backups that are legitimately
+        still running — however long they take — while still reclaiming
+        dirs whose owner process is gone (SIGKILL, OOM, restart).
+        """
+        try:
+            with open(os.path.join(path, cls._TEMP_OWNER_MARKER), 'w') as fh:
+                fh.write(str(os.getpid()))
+        except OSError as e:
+            # Never fail a backup over the marker; the sweep falls back to
+            # age-based cleanup for dirs without one.
+            _logger.warning("Could not write owner marker in %s: %s", path, e)
+
+    @staticmethod
+    def _pid_is_alive(pid):
+        """Return True if a process with this PID currently exists."""
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            return False
+        except PermissionError:
+            return True  # exists but owned by another user
+        except OSError:
+            return False
+        return True
+
+    @classmethod
+    def _temp_dir_owner_alive(cls, path):
+        """Return True if the temp dir's owner marker names a live process."""
+        try:
+            with open(os.path.join(path, cls._TEMP_OWNER_MARKER)) as fh:
+                pid = int(fh.read().strip())
+        except (OSError, ValueError):
+            # No/unreadable marker (e.g. dir created by a pre-marker version
+            # of this module): fall back to pure age-based cleanup.
+            return False
+        return cls._pid_is_alive(pid)
+
+    @classmethod
+    def _cleanup_stale_temp_files(cls, max_age_seconds=2 * 3600,
+                                  hard_max_age_seconds=24 * 3600):
+        """Sweep the system temp dir for leftover backup temp dirs and remove
+        the ones that no longer belong to a running backup.
 
         This is the safety net for cases the per-run try/finally can't cover:
         the worker getting SIGKILL'd by the OOM killer, an Odoo restart in
         the middle of a long filestore copy, or shutil.rmtree silently
         failing under disk pressure with ignore_errors=True.
 
-        The age threshold protects any concurrent backup that is legitimately
-        still in progress — backups in this module never run for hours.
+        A dir is removed only when ALL of these hold:
+        - it is older than ``max_age_seconds``, and
+        - its owner marker (the PID of the process that created it) does not
+          name a live process — so a backup that legitimately runs for many
+          hours is never swept out from under the worker writing to it, and
+        - or, regardless of the owner, it is older than
+          ``hard_max_age_seconds`` (caps leakage if a recycled PID happens to
+          match an unrelated live process).
         """
         tmp_root = tempfile.gettempdir()
-        cutoff = time.time() - max_age_seconds
+        now = time.time()
+        cutoff = now - max_age_seconds
+        hard_cutoff = now - hard_max_age_seconds
         removed = []
         for prefix in cls._TEMP_DIR_PREFIXES:
             for path in glob.glob(os.path.join(tmp_root, prefix + '*')):
                 try:
-                    if os.path.getmtime(path) >= cutoff:
-                        continue  # likely an in-progress backup, leave it
+                    mtime = os.path.getmtime(path)
+                    if mtime >= cutoff:
+                        continue  # recent — likely an in-progress backup
+                    if (
+                        os.path.isdir(path)
+                        and mtime >= hard_cutoff
+                        and cls._temp_dir_owner_alive(path)
+                    ):
+                        continue  # long-running backup still owned by a live process
                     if os.path.isdir(path):
                         shutil.rmtree(path, ignore_errors=True)
                     else:

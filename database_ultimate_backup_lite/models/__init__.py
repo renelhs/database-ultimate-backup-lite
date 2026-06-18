@@ -5,3 +5,4 @@ from . import backup_provider_local
 from . import backup_provider_sftp
 from . import backup_config
 from . import backup_job
+from . import backup_upgrade_teaser

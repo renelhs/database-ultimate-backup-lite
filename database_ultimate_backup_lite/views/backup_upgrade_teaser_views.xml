@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Shared read-only teaser form for Full-edition-only features -->
+    <record id="view_backup_upgrade_teaser_form" model="ir.ui.view">
+        <field name="name">backup.upgrade.teaser.form</field>
+        <field name="model">backup.upgrade.teaser</field>
+        <field name="arch" type="xml">
+            <form string="Full Edition" create="false" edit="false">
+                <sheet>
+                    <div class="oe_title mb-3">
+                        <h1><field name="name" readonly="1" nolabel="1"/></h1>
+                    </div>
+                    <field name="body_html" readonly="1" nolabel="1"/>
+                    <div class="mt-4">
+                        <button name="action_get_full_edition" type="object"
+                                string="Get the Full Edition"
+                                class="btn-primary btn-lg"/>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Cloud storage providers available only in the Full edition -->
+    <record id="action_teaser_aws_s3" model="ir.actions.act_window">
+        <field name="name">Amazon S3 (Full)</field>
+        <field name="res_model">backup.upgrade.teaser</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_backup_upgrade_teaser_form"/>
+        <field name="target">current</field>
+        <field name="context">{'teaser_topic': 'aws_s3'}</field>
+    </record>
+
+    <record id="action_teaser_do_spaces" model="ir.actions.act_window">
+        <field name="name">DigitalOcean Spaces (Full)</field>
+        <field name="res_model">backup.upgrade.teaser</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_backup_upgrade_teaser_form"/>
+        <field name="target">current</field>
+        <field name="context">{'teaser_topic': 'do_spaces'}</field>
+    </record>
+
+    <record id="action_teaser_azure" model="ir.actions.act_window">
+        <field name="name">Azure Blob Storage (Full)</field>
+        <field name="res_model">backup.upgrade.teaser</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_backup_upgrade_teaser_form"/>
+        <field name="target">current</field>
+        <field name="context">{'teaser_topic': 'azure'}</field>
+    </record>
+
+    <record id="action_teaser_gcs" model="ir.actions.act_window">
+        <field name="name">Google Cloud Storage (Full)</field>
+        <field name="res_model">backup.upgrade.teaser</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_backup_upgrade_teaser_form"/>
+        <field name="target">current</field>
+        <field name="context">{'teaser_topic': 'gcs'}</field>
+    </record>
+
+    <record id="action_teaser_gdrive" model="ir.actions.act_window">
+        <field name="name">Google Drive (Full)</field>
+        <field name="res_model">backup.upgrade.teaser</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_backup_upgrade_teaser_form"/>
+        <field name="target">current</field>
+        <field name="context">{'teaser_topic': 'gdrive'}</field>
+    </record>
+
+    <!-- Real-time monitoring dashboard available only in the Full edition -->
+    <record id="action_teaser_dashboard" model="ir.actions.act_window">
+        <field name="name">Dashboard (Full)</field>
+        <field name="res_model">backup.upgrade.teaser</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_backup_upgrade_teaser_form"/>
+        <field name="target">current</field>
+        <field name="context">{'teaser_topic': 'dashboard'}</field>
+    </record>
+</odoo>

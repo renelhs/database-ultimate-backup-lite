@@ -645,11 +645,48 @@
                              class="tab-pane fade show" id="releases"
                              role="tabpanel">
 
-                            <!-- Version 18.0.1.1.0 -->
+                            <!-- Version 18.0.1.2.0 -->
                             <div class="row pt-5 m-0">
                                 <div class="col-md-3">
                                     <h4 style="font-size:16px; font-weight:600; color:#514F4F; margin:0; line-height:26px;">
-                                        Latest Release 18.0.1.1.0
+                                        Latest Release 18.0.1.2.0
+                                    </h4>
+                                    <span style="font-size:14px; color:#7A7979; display:block; margin-bottom:20px;">
+                                        June 18, 2026
+                                    </span>
+                                </div>
+                                <div class="col-md-8">
+                                    <div style="padding:0 0 40px">
+                                        <div style="margin:0 0 10px">
+                                            <div style="display:inline-block; padding:4px 12px; color:#fff; background-color:#6f42c1; border-radius:20px; margin-right: 8px;">
+                                                Security
+                                            </div>
+                                            <div style="display:inline-block; padding:4px 12px; color:#fff; background-color:#28a745; border-radius:20px; margin-right: 8px;">
+                                                Added
+                                            </div>
+                                            <div style="display:inline-block; padding:4px 12px; color:#fff; background-color:#dc3545; border-radius:20px; margin-right: 8px;">
+                                                Fixed
+                                            </div>
+                                        </div>
+                                        <div class="d-flex m-0" style="color:#7A7979;">
+                                            <ul class="pl-3 mb-0">
+                                                <li><strong>SFTP backups now verify the server's identity</strong> - the module remembers your SFTP server's identity on the first connection and checks it on every connection after that, protecting your backups from being intercepted by an impostor server. Fully automatic, no configuration needed - and if the identity ever changes, you get a clear warning with instructions instead of a silent risk.</li>
+                                                <li><strong>Stronger access control for database dumps</strong> - creating a database dump now requires the Backup Administrator role (or the automated backup system) and is verified on every run. Read-only Backup Users can no longer trigger a dump.</li>
+                                                <li><strong>Cloud storage destinations preview (Full edition)</strong> - the Storage Providers menu now shows Amazon S3, DigitalOcean Spaces, Azure Blob Storage, Google Cloud Storage and Google Drive as informational entries marked <em>(Full)</em>. They are not enabled in Lite - opening one simply explains what off-site, multi-cloud backups and the real-time monitoring dashboard look like in the Full edition.</li>
+                                                <li><strong>Full-edition alert channels, highlighted</strong> - the Notifications settings now point out that Slack, Microsoft Teams, Telegram and webhook alerts are available in the Full edition. Lite continues to send the email notifications it always has.</li>
+                                                <li><strong>Long-running backups are no longer interrupted</strong> - on very large databases, a backup running for several hours could have its temporary files removed mid-run by the hourly cleanup job. The cleanup now recognizes a backup that is still in progress and leaves it alone.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div style="padding:0 0 0; border-bottom:1px solid #E3E3E3"></div>
+                                </div>
+                            </div>
+
+                            <!-- Version 18.0.1.1.0 -->
+                            <div class="row pt-3 m-0">
+                                <div class="col-md-3">
+                                    <h4 style="font-size:16px; font-weight:600; color:#514F4F; margin:0; line-height:26px;">
+                                        Version 18.0.1.1.0
                                     </h4>
                                     <span style="font-size:14px; color:#7A7979; display:block; margin-bottom:20px;">
                                         June 01, 2026
@@ -827,7 +864,7 @@
 
 <div class="footer" style="text-align: center; padding: 40px 20px; color: #777; font-size: 0.9em; background: #f9f9f9; margin-top: 40px;">
     <p style="margin: 5px 0;"><strong>Database Ultimate Backup Lite for Odoo 18.0</strong></p>
-    <p style="margin: 5px 0;">Version 1.1.0 | Licensed under MIT | Free</p>
+    <p style="margin: 5px 0;">Version 1.2.0 | Licensed under MIT | Free</p>
     <p style="margin: 5px 0;">Developed by René Hechavarría</p>
     <p style="margin-top: 15px; font-style: italic;">
         Free local &amp; SFTP backup solution with automated scheduling,
