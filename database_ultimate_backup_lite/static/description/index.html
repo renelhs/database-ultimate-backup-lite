@@ -116,6 +116,51 @@
                     </div>
                 </div>
 
+                <!-- Platform availability -->
+                <div class="my-5">
+                    <div style="background: #f8f8f8; border-radius: 16px; padding: 40px 30px;">
+                        <h2 class="text-center text-uppercase"
+                            style="font-family: Montserrat, 'sans-serif'; font-size: 32px; color: #667eea; font-weight: 800; margin-bottom: 8px;">
+                            Platform Availability
+                        </h2>
+                        <p class="text-center" style="color: #64728f; font-size: 16px; max-width: 640px; margin: 0 auto 30px;">
+                            Where the Lite edition's backups actually run.
+                        </p>
+                        <div class="row justify-content-center" style="display: flex; flex-wrap: wrap; gap: 20px 0;">
+                            <div class="col-md-4 col-sm-12">
+                                <div style="background: #fff; border-radius: 12px; padding: 28px 20px; text-align: center; height: 100%; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border-top: 4px solid #22c55e;">
+                                    <div style="font-size: 2.4em;">🖥️</div>
+                                    <h3 style="font-family: Montserrat; font-weight: 700; font-size: 20px; color: #121212; margin: 12px 0 6px;">On Premise</h3>
+                                    <div style="color: #22c55e; font-weight: 700; font-size: 18px;">✔ Supported</div>
+                                    <p style="color: #64728f; font-size: 14px; margin-top: 10px; margin-bottom: 0;">Full Local &amp; SFTP backups on self-hosted Odoo.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-sm-12">
+                                <div style="background: #fff; border-radius: 12px; padding: 28px 20px; text-align: center; height: 100%; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border-top: 4px solid #ef4444;">
+                                    <div style="font-size: 2.4em; filter: grayscale(1); opacity: 0.65;">☁️</div>
+                                    <h3 style="font-family: Montserrat; font-weight: 700; font-size: 20px; color: #121212; margin: 12px 0 6px;">Odoo Online</h3>
+                                    <div style="color: #ef4444; font-weight: 700; font-size: 18px;">✘ Not available</div>
+                                    <p style="color: #64728f; font-size: 14px; margin-top: 10px; margin-bottom: 0;">Odoo Online (SaaS) does not allow installing third-party modules.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-sm-12">
+                                <div style="background: #fff; border-radius: 12px; padding: 28px 20px; text-align: center; height: 100%; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border-top: 4px solid #ef4444;">
+                                    <div style="font-size: 2.4em; filter: grayscale(1); opacity: 0.65;">⚙️</div>
+                                    <h3 style="font-family: Montserrat; font-weight: 700; font-size: 20px; color: #121212; margin: 12px 0 6px;">Odoo.sh</h3>
+                                    <div style="color: #ef4444; font-weight: 700; font-size: 18px;">✘ Not supported</div>
+                                    <p style="color: #64728f; font-size: 14px; margin-top: 10px; margin-bottom: 0;">Odoo.sh blocks <code>pg_dump</code> for tenant databases. Odoo.sh backups require the Full edition.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 12px; padding: 18px 24px; margin-top: 28px; text-align: center;">
+                            <p style="color: #fff; font-size: 15px; margin: 0;">
+                                <strong>Running on Odoo.sh?</strong> The Lite edition cannot create backups there because the platform blocks <code style="color:#fff;">pg_dump</code>.
+                                Upgrade to <strong>Database Ultimate Backup (Full)</strong>, which ships native Odoo.sh backup support.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Overview section -->
                 <div class="my-5">
                     <div class="position-relative"
@@ -645,11 +690,40 @@
                              class="tab-pane fade show" id="releases"
                              role="tabpanel">
 
-                            <!-- Version 18.0.1.2.0 -->
+                            <!-- Version 18.0.1.2.1 -->
                             <div class="row pt-5 m-0">
                                 <div class="col-md-3">
                                     <h4 style="font-size:16px; font-weight:600; color:#514F4F; margin:0; line-height:26px;">
-                                        Latest Release 18.0.1.2.0
+                                        Latest Release 18.0.1.2.1
+                                    </h4>
+                                    <span style="font-size:14px; color:#7A7979; display:block; margin-bottom:20px;">
+                                        June 26, 2026
+                                    </span>
+                                </div>
+                                <div class="col-md-8">
+                                    <div style="padding:0 0 40px">
+                                        <div style="margin:0 0 10px">
+                                            <div style="display:inline-block; padding:4px 12px; color:#fff; background-color:#17a2b8; border-radius:20px; margin-right: 8px;">
+                                                Improved
+                                            </div>
+                                        </div>
+                                        <div class="d-flex m-0" style="color:#7A7979;">
+                                            <ul class="pl-3 mb-0">
+                                                <li><strong>Odoo.sh now clearly unsupported</strong> - the description shows a Platform Availability matrix: Lite runs On Premise only (Odoo Online and Odoo.sh are not available)</li>
+                                                <li><strong>Fail fast on Odoo.sh</strong> - backups now stop with a clear, actionable message instead of silently producing an empty dump, because Odoo.sh blocks <code>pg_dump</code> for tenant databases</li>
+                                                <li>Self-hosted / On-Premise behaviour is unchanged</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div style="padding:0 0 0; border-bottom:1px solid #E3E3E3"></div>
+                                </div>
+                            </div>
+
+                            <!-- Version 18.0.1.2.0 -->
+                            <div class="row pt-3 m-0">
+                                <div class="col-md-3">
+                                    <h4 style="font-size:16px; font-weight:600; color:#514F4F; margin:0; line-height:26px;">
+                                        Release 18.0.1.2.0
                                     </h4>
                                     <span style="font-size:14px; color:#7A7979; display:block; margin-bottom:20px;">
                                         June 18, 2026
@@ -864,7 +938,7 @@
 
 <div class="footer" style="text-align: center; padding: 40px 20px; color: #777; font-size: 0.9em; background: #f9f9f9; margin-top: 40px;">
     <p style="margin: 5px 0;"><strong>Database Ultimate Backup Lite for Odoo 18.0</strong></p>
-    <p style="margin: 5px 0;">Version 1.2.0 | Licensed under MIT | Free</p>
+    <p style="margin: 5px 0;">Version 1.2.1 | Licensed under MIT | Free</p>
     <p style="margin: 5px 0;">Developed by René Hechavarría</p>
     <p style="margin-top: 15px; font-style: italic;">
         Free local &amp; SFTP backup solution with automated scheduling,

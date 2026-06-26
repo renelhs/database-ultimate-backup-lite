@@ -65,7 +65,7 @@
     'support': "reneluishs@gmail.com",
 
     'category': 'Administration',
-    'version': '18.0.1.2.0',
+    'version': '18.0.1.2.1',
 
     # Module dependencies
     'depends': ['base'],
