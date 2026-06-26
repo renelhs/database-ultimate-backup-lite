@@ -5,6 +5,28 @@ All notable changes to the Database Ultimate Backup Lite module will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [16.0.1.1.1] - 2026-06-26
+
+### Changed
+
+- **Odoo.sh is now explicitly unsupported**: the module documentation and store
+  description now state that Lite backups run on On Premise only — Odoo Online
+  (SaaS does not allow third-party modules) and Odoo.sh are not available. A new
+  *Platform Availability* section in the store description makes this clear up
+  front.
+
+### Fixed
+
+- **Fail fast on Odoo.sh instead of producing an empty backup**: Odoo.sh revokes
+  the tenant role's read access to `pg_settings` (CVE-2024-7348 hardening), so
+  `pg_dump` aborts and previously left a silently empty/corrupt dump. Backups now
+  detect Odoo.sh (via the platform's `backup.daily` directory) and stop with a
+  clear, actionable error pointing to Database Ultimate Backup (Full), which
+  ships native Odoo.sh backup support. Self-hosted/On-Premise behaviour is
+  unchanged.
+
+---
+
 ## [16.0.1.1.0] - 2026-06-01
 
 ### Reliability & Large-Database Performance

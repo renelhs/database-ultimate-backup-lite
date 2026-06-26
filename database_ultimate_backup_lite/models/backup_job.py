@@ -352,6 +352,26 @@ class BackupJob(models.Model):
             return msg[:max_len] + ' … (message truncated)'
         return msg
     
+    @staticmethod
+    def _is_odoo_sh():
+        """Detect whether we are running on an Odoo.sh instance.
+
+        Odoo.sh exposes its platform-managed daily backup as a
+        ``backup.daily`` directory in the instance's working directory (and
+        in the home directory). That directory does not exist on self-hosted
+        deployments, so its presence is a reliable Odoo.sh signal. This is the
+        same detection the Full edition uses to switch to its native Odoo.sh
+        backup source.
+        """
+        bases = [os.getcwd(), os.path.expanduser('~')]
+        for base in bases:
+            try:
+                if os.path.isdir(os.path.join(base, 'backup.daily')):
+                    return True
+            except OSError:
+                continue
+        return False
+
     def _create_database_dump(self, stream):
         """
         Create database dump.
@@ -368,6 +388,21 @@ class BackupJob(models.Model):
 
         if not is_cron_user and not is_manual_backup:
             raise AccessDenied("Database dumps can only be created by the backup system or as manual backups")
+
+        # Odoo.sh guard: the platform revokes the tenant role's read access to
+        # pg_settings (CVE-2024-7348 hardening), so pg_dump aborts and would
+        # otherwise produce an empty/corrupt dump silently. The Lite edition
+        # does not implement the Odoo.sh backup path. Fail fast with a clear
+        # message instead of shipping a broken backup.
+        if self._is_odoo_sh():
+            raise UserError(
+                "Database Ultimate Backup Lite cannot create backups on Odoo.sh.\n\n"
+                "Odoo.sh blocks pg_dump for tenant databases, so a reliable dump "
+                "cannot be produced here. Native Odoo.sh backup support is "
+                "available in Database Ultimate Backup (Full), which reads "
+                "Odoo.sh's daily backup directly. Please upgrade to back up an "
+                "Odoo.sh instance."
+            )
 
         self._log(f"Creating {self.backup_format} dump of database: {self.database_name}")
 
