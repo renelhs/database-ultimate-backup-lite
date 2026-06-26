@@ -5,6 +5,44 @@ All notable changes to the Database Ultimate Backup Lite module will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [19.0.1.4.2] - 2026-06-26
+
+### Changed
+
+- **Odoo.sh is now explicitly unsupported**: the module documentation and store
+  description now state that Lite backups run on On Premise only — Odoo Online
+  (SaaS does not allow third-party modules) and Odoo.sh are not available. A new
+  *Platform Availability* section in the store description makes this clear up
+  front.
+
+### Fixed
+
+- **Fail fast on Odoo.sh instead of producing an empty backup**: Odoo.sh revokes
+  the tenant role's read access to `pg_settings` (CVE-2024-7348 hardening), so
+  `pg_dump` aborts and previously left a silently empty/corrupt dump. Backups now
+  detect Odoo.sh (via the platform's `backup.daily` directory) and stop with a
+  clear, actionable error pointing to Database Ultimate Backup (Full), which
+  ships native Odoo.sh backup support. Self-hosted/On-Premise behaviour is
+  unchanged.
+
+---
+
+## [19.0.1.4.1] - 2026-06-12
+
+### Security
+
+- **Dump authorization hardened by group membership**: the in-method check in
+  `backup_job._create_database_dump` previously relied on `is_manual`, a
+  caller-controlled context flag defaulting to `True`, so it never actually
+  gated anything. Database dumps now require the backup cron user or explicit
+  **Backup Administrator** (`group_backup_admin`) membership, verified via
+  `has_group` on every dump; `is_manual` is kept only as audit metadata. Because
+  `_dump_db` intentionally bypasses Odoo's `@check_db_management_enabled` gate
+  (so backups keep working when `list_db = False`), access is governed by this
+  group rather than the server setting — restrict group membership accordingly.
+
+---
+
 ## [19.0.1.4.0] - 2026-06-12
 
 ### Added
