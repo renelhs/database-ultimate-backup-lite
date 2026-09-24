@@ -204,8 +204,7 @@ Upgrade to **Database Ultimate Backup** (Full Edition) for enterprise-grade mult
 
 ## Support
 
-- **GitHub**: https://github.com/renelhs
-- **Email**: reneluishs@gmail.com
+- **GitHub Issues**: https://github.com/renelhs/database-ultimate-backup-lite/issues
 
 ## License
 
