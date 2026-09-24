@@ -85,7 +85,7 @@
 <body>
 <!-- overview -->
 <div class="container">
-    <div class="my-5">
+    <div class="my-4">
         <div class="tab-content" id="descriptionTabContent">
             <!-- description -->
             <div class="tab-pane fade show active" id="home" role="tabpanel"
@@ -104,51 +104,6 @@
                         <span style="display:inline-block; padding:8px 13px; border:1px solid #6475BF; border-radius:30px; color:#fff; font-size:13px;">Free</span>
                         <span style="display:inline-block; padding:8px 13px; border:1px solid #6475BF; border-radius:30px; color:#fff; font-size:13px;">Local &amp; SFTP</span>
                         <span style="display:inline-block; padding:8px 13px; border:1px solid #6475BF; border-radius:30px; color:#fff; font-size:13px;">Scheduled &amp; verified</span>
-                    </div>
-                </div>
-
-                <!-- Platform availability -->
-                <div class="my-5">
-                    <div style="background-color: #f8f8f8; border-radius: 16px; padding: 40px 30px;">
-                        <h2 class="text-center text-uppercase"
-                            style="font-family: Montserrat, 'sans-serif'; font-size: 32px; color: #667eea; font-weight: 800; margin-bottom: 8px;">
-                            Platform Availability
-                        </h2>
-                        <p class="text-center" style="color: #64728f; font-size: 16px; max-width: 640px; margin: 0 auto 30px;">
-                            Where the Lite edition's backups actually run.
-                        </p>
-                        <div class="row justify-content-center" style="display: flex; flex-wrap: wrap; gap: 20px 0;">
-                            <div class="col-md-4 col-sm-12">
-                                <div style="background-color: #fff; border-radius: 12px; padding: 28px 20px; text-align: center; height: 100%; border: 1px solid #e3e3e3; border-top: 4px solid #22c55e;">
-                                    <div style="font-size: 2.4em;">🖥️</div>
-                                    <h3 style="font-family: Montserrat; font-weight: 700; font-size: 20px; color: #121212; margin: 12px 0 6px;">On Premise</h3>
-                                    <div style="color: #22c55e; font-weight: 700; font-size: 18px;">✔ Supported</div>
-                                    <p style="color: #64728f; font-size: 14px; margin-top: 10px; margin-bottom: 0;">Full Local &amp; SFTP backups on self-hosted Odoo.</p>
-                                </div>
-                            </div>
-                            <div class="col-md-4 col-sm-12">
-                                <div style="background-color: #fff; border-radius: 12px; padding: 28px 20px; text-align: center; height: 100%; border: 1px solid #e3e3e3; border-top: 4px solid #ef4444;">
-                                    <div style="font-size: 2.4em; filter: grayscale(1); opacity: 0.65;">☁️</div>
-                                    <h3 style="font-family: Montserrat; font-weight: 700; font-size: 20px; color: #121212; margin: 12px 0 6px;">Odoo Online</h3>
-                                    <div style="color: #ef4444; font-weight: 700; font-size: 18px;">✘ Not available</div>
-                                    <p style="color: #64728f; font-size: 14px; margin-top: 10px; margin-bottom: 0;">Odoo Online (SaaS) does not allow installing third-party modules.</p>
-                                </div>
-                            </div>
-                            <div class="col-md-4 col-sm-12">
-                                <div style="background-color: #fff; border-radius: 12px; padding: 28px 20px; text-align: center; height: 100%; border: 1px solid #e3e3e3; border-top: 4px solid #ef4444;">
-                                    <div style="font-size: 2.4em; filter: grayscale(1); opacity: 0.65;">⚙️</div>
-                                    <h3 style="font-family: Montserrat; font-weight: 700; font-size: 20px; color: #121212; margin: 12px 0 6px;">Odoo.sh</h3>
-                                    <div style="color: #ef4444; font-weight: 700; font-size: 18px;">✘ Not supported</div>
-                                    <p style="color: #64728f; font-size: 14px; margin-top: 10px; margin-bottom: 0;">Odoo.sh blocks <code>pg_dump</code> for tenant databases. Odoo.sh backups require the Full edition.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="background-color: #667eea; border-radius: 12px; padding: 18px 24px; margin-top: 28px; text-align: center;">
-                            <p style="color: #fff; font-size: 15px; margin: 0;">
-                                <strong>Running on Odoo.sh?</strong> The Lite edition cannot create backups there because the platform blocks <code style="background-color: #535ec9; color: #fff; padding: 1px 6px; border-radius: 4px;">pg_dump</code>.
-                                The Full edition uses a different backup method that supports Odoo.sh.
-                            </p>
-                        </div>
                     </div>
                 </div>
 
@@ -228,30 +183,6 @@
                     </div>
                 </div>
 
-                <!-- The only destinations available in Lite -->
-                <div class="my-5">
-                    <h2 class="text-center" style="font-size:clamp(28px, 3vw, 36px); color:#5968C8; font-weight:800; margin-bottom:10px;">
-                        Storage destinations in Lite
-                    </h2>
-                    <p class="text-center" style="color:#64728f; margin-bottom:24px;">Use either destination or send the same backup to both.</p>
-                    <div class="row" style="display:flex; flex-wrap:wrap; row-gap:16px;">
-                        <div class="col-md-6 col-sm-12">
-                            <div class="storage-provider-card">
-                                <img src="provider_local.png" alt="">
-                                <h3 style="color:#293445; font-size:20px; font-weight:700;">Local Storage</h3>
-                                <p style="color:#475569; margin:0;">Keep backups on the server or a mounted drive, with disk-space checks.</p>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-sm-12">
-                            <div class="storage-provider-card">
-                                <img src="provider_sftp.png" alt="">
-                                <h3 style="color:#293445; font-size:20px; font-weight:700;">SFTP Storage</h3>
-                                <p style="color:#475569; margin:0;">Send copies to a remote SSH server with host-key verification.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Tabs section -->
                 <div class="mb-4 bg-white"
                      style="border: 1px solid #EBEEF2; border-radius: 6px; box-shadow: 0px 8px 20px -4px rgba(0, 0, 0, 0.10); border: 1px solid #EBEEF2;">
@@ -322,6 +253,81 @@
                                                 Store backups locally or transfer them securely to any remote server via SFTP.
                                                 Built with the Strategy design pattern for clean architecture and extensibility.
                                             </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Storage Providers -->
+                            <div class="position-relative mb-4"
+                                 style="border-radius:10px; background-color:#f4f4f4">
+                                <div class="p-md-5 p-3 position-relative">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <h1 style="font-weight:700; font-size:40px; line-height:120%; text-align:center; text-transform:capitalize;">
+                                                <span style="color:#121212;">Supported</span>
+                                                <span style="color:#667eea;">Storage Providers</span>
+                                            </h1>
+                                            <p style="color:#64728f; font-size:16px; text-align:center; margin:10px 0 0;">
+                                                Use either destination or send the same backup to both.
+                                            </p>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="row mt-4">
+                                                <div class="col-md-6 mb-3">
+                                                    <div class="storage-provider-card" style="height:100%; padding:24px; border:1px solid #e2e7f0; border-radius:12px; background:#fff; box-shadow:0 3px 12px rgba(31,41,55,0.06); text-align:center;">
+                                                        <img src="provider_local.png" alt="" width="72" height="72" style="display:block; width:72px; height:72px; margin:0 auto 14px;">
+                                                        <h4 style="margin:0 0 10px; color:#293445; font-size:20px; font-weight:700;">Local Storage</h4>
+                                                        <p style="margin:0 0 10px; color:#475569; font-size:14px; line-height:1.5;">Keep backups on the server or a mounted drive, with free-space checks.</p>
+                                                        <p style="margin:0; color:#5a62c5; font-size:13px; font-weight:600; line-height:1.5;">Best for: quick local copies or NAS storage</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <div class="storage-provider-card" style="height:100%; padding:24px; border:1px solid #e2e7f0; border-radius:12px; background:#fff; box-shadow:0 3px 12px rgba(31,41,55,0.06); text-align:center;">
+                                                        <img src="provider_sftp.png" alt="" width="72" height="72" style="display:block; width:72px; height:72px; margin:0 auto 14px;">
+                                                        <h4 style="margin:0 0 10px; color:#293445; font-size:20px; font-weight:700;">SFTP Storage</h4>
+                                                        <p style="margin:0 0 10px; color:#475569; font-size:14px; line-height:1.5;">Send copies to a remote SSH server with host-key verification.</p>
+                                                        <p style="margin:0; color:#5a62c5; font-size:13px; font-weight:600; line-height:1.5;">Best for: off-site copies and redundancy</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Platform Availability -->
+                            <div class="position-relative mb-4"
+                                 style="border-radius:10px; background-color:#f4f4f4">
+                                <div class="p-md-5 p-3 position-relative">
+                                    <h1 style="font-weight:700; font-size:40px; line-height:120%; text-align:center; text-transform:capitalize;">
+                                        <span style="color:#121212;">Platform</span>
+                                        <span style="color:#667eea;">Availability</span>
+                                    </h1>
+                                    <p style="color:#64728f; font-size:16px; text-align:center; margin:10px 0 24px;">
+                                        Lite backups run on self-hosted Odoo.
+                                    </p>
+                                    <div class="row mt-4">
+                                        <div class="col-md-4 mb-3">
+                                            <div style="height:100%; padding:24px; border:1px solid #e2e7f0; border-top:4px solid #22c55e; border-radius:12px; background:#fff; text-align:center;">
+                                                <h4 style="margin:0 0 10px; color:#293445; font-size:20px; font-weight:700;">On Premise</h4>
+                                                <p style="margin:0 0 10px; color:#16a34a; font-weight:700;">Supported</p>
+                                                <p style="margin:0; color:#475569; font-size:14px; line-height:1.5;">Local and SFTP backups on self-hosted Odoo.</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <div style="height:100%; padding:24px; border:1px solid #e2e7f0; border-top:4px solid #ef4444; border-radius:12px; background:#fff; text-align:center;">
+                                                <h4 style="margin:0 0 10px; color:#293445; font-size:20px; font-weight:700;">Odoo Online</h4>
+                                                <p style="margin:0 0 10px; color:#dc2626; font-weight:700;">Not available</p>
+                                                <p style="margin:0; color:#475569; font-size:14px; line-height:1.5;">Odoo Online does not allow third-party modules.</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <div style="height:100%; padding:24px; border:1px solid #e2e7f0; border-top:4px solid #ef4444; border-radius:12px; background:#fff; text-align:center;">
+                                                <h4 style="margin:0 0 10px; color:#293445; font-size:20px; font-weight:700;">Odoo.sh</h4>
+                                                <p style="margin:0 0 10px; color:#dc2626; font-weight:700;">Not supported</p>
+                                                <p style="margin:0; color:#475569; font-size:14px; line-height:1.5;">Odoo.sh blocks <code>pg_dump</code> for tenant databases. Odoo.sh backups require the Full edition.</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -748,17 +754,13 @@
                 </div>
 
                 <!-- CTA Section -->
-                <div class="my-5">
-                    <div style="background-color: #667eea; color: white; padding: 40px; border-radius: 8px; text-align: center;">
-                        <h2 style="margin: 0 0 15px 0; color: white; font-size: 32px; font-weight: 700;">
-                            Ready to Secure Your Data?
+                <div class="my-4">
+                    <div style="background-color: #0A1425; color: white; padding: 34px; border-radius: 12px; text-align: center;">
+                        <h2 style="margin: 0 0 12px; color: white; font-family: Montserrat, Arial, sans-serif; font-size: 30px; font-weight: 700;">
+                            Put your backup plan in place
                         </h2>
-                        <p style="font-size: 1.1em; margin: 10px 0;">
-                            Install <strong>Database Ultimate Backup Lite</strong> today - it's free!
-                            Enjoy automated, verified, and reliable local &amp; SFTP database backups.
-                        </p>
-                        <p style="margin-top: 20px; font-size: 1.2em;">
-                            Don't forget to rate this module if you find it useful!
+                        <p style="max-width: 720px; margin: 0 auto; color: #E0E6FA; font-size: 16px; line-height: 1.6;">
+                            Start with a verified local backup, add SFTP for off-site copies, and monitor every run from Odoo.
                         </p>
                     </div>
                 </div>
