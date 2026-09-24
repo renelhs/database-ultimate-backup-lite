@@ -55,6 +55,7 @@ class BackupProviderSftp(models.Model):
     )
     password = fields.Char(
         string='Password',
+        groups='database_ultimate_backup_lite.group_backup_admin',
         help='Password for authentication (leave empty to use key-based auth)'
     )
     remote_directory = fields.Char(
@@ -120,6 +121,7 @@ class BackupProviderSftp(models.Model):
     def test_connection(self):
         """Test SFTP connection and permissions."""
         self.ensure_one()
+        self.check_access('write')
 
         if not asyncssh:
             error_msg = "AsyncSSH library not available. Please install it with: pip install asyncssh"
@@ -228,6 +230,7 @@ class BackupProviderSftp(models.Model):
     def upload_backup(self, backup_file_path, remote_filename):
         """Upload backup file via SFTP."""
         self.ensure_one()
+        self.check_access('write')
 
         if not asyncssh:
             return {
@@ -299,6 +302,7 @@ class BackupProviderSftp(models.Model):
     def download_backup(self, remote_filename, local_path):
         """Download backup file via SFTP."""
         self.ensure_one()
+        self.check_access('write')
 
         if not asyncssh:
             return {
@@ -353,6 +357,7 @@ class BackupProviderSftp(models.Model):
     def list_backups(self, prefix=None):
         """List backup files on SFTP server."""
         self.ensure_one()
+        self.check_access('write')
 
         if not asyncssh:
             return []
@@ -413,6 +418,7 @@ class BackupProviderSftp(models.Model):
     def delete_backup(self, remote_filename):
         """Delete backup file from SFTP server."""
         self.ensure_one()
+        self.check_access('write')
 
         if not asyncssh:
             return {
@@ -457,6 +463,7 @@ class BackupProviderSftp(models.Model):
     def get_storage_info(self):
         """Get SFTP storage information."""
         self.ensure_one()
+        self.check_access('write')
 
         if not asyncssh:
             return {}
@@ -514,6 +521,7 @@ class BackupProviderSftp(models.Model):
     def action_reset_host_key(self):
         """Forget the pinned host key (e.g. after a legitimate server migration)."""
         self.ensure_one()
+        self.check_access('write')
         self.write({
             'server_host_key': False,
             'host_key_fingerprint': False,

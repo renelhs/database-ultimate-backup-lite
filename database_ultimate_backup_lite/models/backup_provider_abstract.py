@@ -3,7 +3,7 @@
 import logging
 
 from abc import abstractmethod
-from odoo import models, fields
+from odoo import api, models, fields
 
 _logger = logging.getLogger(__name__)
 
@@ -38,9 +38,9 @@ class BackupProviderAbstract(models.AbstractModel):
         readonly=True
     )
     
-    def name_get(self):
-        """Return name with provider type for better identification."""
-        result = []
+    @api.depends('name')
+    def _compute_display_name(self):
+        """Show the provider type alongside its name."""
         for record in self:
             if record.name and hasattr(record, 'provider_type') and record.provider_type:
                 # Get provider type name from field selection if available
@@ -54,8 +54,7 @@ class BackupProviderAbstract(models.AbstractModel):
                 name = record.name
             else:
                 name = f"Provider #{record.id}" if record.id else "New Provider"
-            result.append((record.id, name))
-        return result
+            record.display_name = name
     
     # Abstract methods that must be implemented by concrete providers
     @abstractmethod
@@ -74,6 +73,8 @@ class BackupProviderAbstract(models.AbstractModel):
         
         This method calls test_connection() and displays appropriate notifications.
         """
+        self.ensure_one()
+        self.check_access('write')
         try:
             result = self.test_connection()
             

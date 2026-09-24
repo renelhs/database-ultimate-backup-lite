@@ -10,7 +10,10 @@
                 <field name="database_name"/>
                 <field name="backup_format"/>
                 <field name="last_backup_date"/>
-                <field name="last_backup_status" decoration-success="last_backup_status == 'success'" decoration-danger="last_backup_status == 'failed'"/>
+                <field name="last_backup_status" widget="badge"
+                       decoration-success="last_backup_status == 'success'"
+                       decoration-warning="last_backup_status == 'warning'"
+                       decoration-danger="last_backup_status == 'error'"/>
                 <field name="backup_success_rate"/>
                 <field name="total_backups_created"/>
             </list>
@@ -24,10 +27,15 @@
         <field name="arch" type="xml">
             <form string="Backup Configuration">
                 <header>
-                    <button name="create_backup" type="object" string="Create Backup Now" class="btn-primary"/>
-                    <button name="test_providers" type="object" string="Test Providers" class="btn-secondary"/>
-                    <button name="test_retention_policy" type="object" string="Test Retention Policy" class="btn-secondary"/>
-                    <button name="cleanup_old_backups" type="object" string="Cleanup Old Backups" class="btn-secondary" confirm="This will permanently delete old backups according to your retention policy. Are you sure?"/>
+                    <button name="create_backup" type="object" string="Create Backup Now" icon="archive" class="btn-primary"
+                            groups="database_ultimate_backup_lite.group_backup_admin"/>
+                    <button name="test_providers" type="object" string="Test Providers" icon="link" class="btn-secondary"
+                            groups="database_ultimate_backup_lite.group_backup_admin"/>
+                    <button name="test_retention_policy" type="object" string="Test Retention Policy" icon="checklist" class="btn-secondary"
+                            groups="database_ultimate_backup_lite.group_backup_admin"/>
+                    <button name="cleanup_old_backups" type="object" string="Cleanup Old Backups" icon="delete" class="btn-secondary"
+                            groups="database_ultimate_backup_lite.group_backup_admin"
+                            confirm="This will permanently delete old backups according to your retention policy. Are you sure?"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -46,13 +54,21 @@
                                 <group string="Database Configuration">
                                     <field name="database_name"/>
                                     <field name="backup_format"/>
+                                    <field name="include_filestore" invisible="backup_format != 'zip'"/>
                                     <field name="backup_name_template"/>
                                 </group>
                                 <group string="Storage Providers">
                                     <field name="local_provider_ids" widget="many2many_tags"/>
                                     <field name="sftp_provider_ids" widget="many2many_tags"/>
+                                    <div class="text-muted" colspan="2">
+                                        Lite supports local and SFTP storage. Cloud destinations are available in the Full edition.
+                                    </div>
                                 </group>
                             </group>
+                            <div class="alert alert-warning mt-2" role="alert"
+                                 invisible="backup_format != 'zip' or include_filestore">
+                                Files stored in the filestore will be excluded from this ZIP backup and cannot be recovered from it.
+                            </div>
                         </page>
 
                         <page string="Retention Policy">
@@ -76,11 +92,8 @@
                                     <field name="notification_emails" placeholder="email1@example.com, email2@example.com"/>
                                 </group>
                             </group>
-                            <div class="alert alert-info mt-2" role="alert">
-                                <i class="fa fa-bell-o me-1" role="img" aria-label="Alerts"/>
-                                Slack, Microsoft Teams, Telegram and webhook alerts are available in the
-                                <a href="https://apps.odoo.com/apps/modules/19.0/database_ultimate_backup"
-                                   target="_blank" rel="noopener noreferrer">Full Edition</a>.
+                            <div class="text-muted mt-2">
+                                Slack, Microsoft Teams, Telegram and webhook alerts are available in the Full edition.
                             </div>
                         </page>
 
@@ -88,7 +101,10 @@
                             <group>
                                 <group string="Backup History">
                                     <field name="last_backup_date" readonly="1"/>
-                                    <field name="last_backup_status" readonly="1"/>
+                                    <field name="last_backup_status" widget="badge" readonly="1"
+                                           decoration-success="last_backup_status == 'success'"
+                                           decoration-warning="last_backup_status == 'warning'"
+                                           decoration-danger="last_backup_status == 'error'"/>
                                     <field name="last_backup_message" readonly="1"/>
                                 </group>
                                 <group string="Performance Metrics">
@@ -101,7 +117,8 @@
                             <field name="backup_job_ids" readonly="1">
                                 <list limit="10">
                                     <field name="start_time"/>
-                                    <field name="status" decoration-success="status == 'success'" decoration-danger="status == 'error'"/>
+                                    <field name="status" widget="badge" decoration-success="status == 'success'"
+                                           decoration-warning="status == 'warning'" decoration-danger="status == 'error'"/>
                                     <field name="duration_human"/>
                                     <field name="backup_size_human"/>
                                 </list>
@@ -130,7 +147,7 @@
                 <filter string="Success" name="recent_success"
                         domain="[('last_backup_status', '=', 'success')]"/>
                 <filter string="Failed" name="recent_failures"
-                        domain="[('last_backup_status', '=', 'failed')]"/>
+                        domain="[('last_backup_status', '=', 'error')]"/>
                 <filter string="Never Backed Up" name="never_backed_up"
                         domain="[('last_backup_date', '=', False)]"/>
 
@@ -153,8 +170,8 @@
                 Create your first backup configuration
             </p>
             <p>
-                Configure automated database backups with local storage providers,
-                retention policies, and verification options.
+                Create a local or SFTP storage provider, then add it to a backup
+                configuration with your retention and verification settings.
             </p>
         </field>
     </record>

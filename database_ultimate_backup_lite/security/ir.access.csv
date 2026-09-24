@@ -1,0 +1,11 @@
+id,name,model_id,group_id/id,operation,domain
+access_backup_config_user,backup.config.user,backup.config,database_ultimate_backup_lite.group_backup_user,r,
+access_backup_config_admin,backup.config.admin,backup.config,database_ultimate_backup_lite.group_backup_admin,crud,
+access_backup_job_user,backup.job.user,backup.job,database_ultimate_backup_lite.group_backup_user,r,
+access_backup_job_admin,backup.job.admin,backup.job,database_ultimate_backup_lite.group_backup_admin,crud,
+access_backup_provider_abstract_user,backup.provider.abstract.user,backup.provider.abstract,database_ultimate_backup_lite.group_backup_user,r,
+access_backup_provider_abstract_admin,backup.provider.abstract.admin,backup.provider.abstract,database_ultimate_backup_lite.group_backup_admin,crud,
+access_backup_provider_local_user,backup.provider.local.user,backup.provider.local,database_ultimate_backup_lite.group_backup_user,r,
+access_backup_provider_local_admin,backup.provider.local.admin,backup.provider.local,database_ultimate_backup_lite.group_backup_admin,crud,
+access_backup_provider_sftp_user,backup.provider.sftp.user,backup.provider.sftp,database_ultimate_backup_lite.group_backup_user,r,
+access_backup_provider_sftp_admin,backup.provider.sftp.admin,backup.provider.sftp,database_ultimate_backup_lite.group_backup_admin,crud,

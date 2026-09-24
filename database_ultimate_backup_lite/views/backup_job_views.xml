@@ -5,11 +5,12 @@
         <field name="name">backup.job.list</field>
         <field name="model">backup.job</field>
         <field name="arch" type="xml">
-            <list string="Backup Jobs" decoration-success="status == 'success'" decoration-danger="status == 'error'" decoration-warning="status in ('running', 'warning')">
+            <list string="Backup Jobs" create="false" decoration-success="status == 'success'" decoration-danger="status == 'error'" decoration-warning="status in ('running', 'warning')">
                 <field name="display_name"/>
-                <field name="config_id"/>
-                <field name="database_name"/>
+                <field name="config_id" optional="hide"/>
+                <field name="database_name" optional="hide"/>
                 <field name="backup_format"/>
+                <field name="include_filestore" optional="hide"/>
                 <field name="start_time"/>
                 <field name="duration_human"/>
                 <field name="backup_size_human"/>
@@ -26,7 +27,7 @@
         <field name="arch" type="xml">
             <form string="Backup Job" create="false" edit="false">
                 <header>
-                    <field name="status" widget="statusbar" statusbar_visible="pending,running,success,error"/>
+                    <field name="status" widget="statusbar" statusbar_visible="pending,running,success,warning,error"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -40,6 +41,7 @@
                             <field name="config_id"/>
                             <field name="database_name"/>
                             <field name="backup_format"/>
+                            <field name="include_filestore" invisible="backup_format != 'zip'"/>
                             <field name="backup_filename"/>
                         </group>
                         <group string="Timing">
@@ -127,8 +129,8 @@
                 No backup jobs found
             </p>
             <p>
-                Backup jobs will appear here when you create backups from your configurations.
-                Each job tracks the execution, timing, and results of individual backup operations.
+                Jobs appear after a backup runs. Create a backup configuration and
+                use Create Backup Now to start one.
             </p>
         </field>
     </record>

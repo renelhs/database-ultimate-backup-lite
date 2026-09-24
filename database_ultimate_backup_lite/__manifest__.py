@@ -8,14 +8,14 @@
         Database Ultimate Backup Lite - Free Backup Solution with Local & SFTP
         ======================================================================
 
-        A free, reliable database backup solution for Odoo 19.0 with local and SFTP
+        A free, reliable database backup solution for Odoo 20.0 with local and SFTP
         remote storage, automated scheduling, retention policies, and comprehensive monitoring.
 
         Core Features
         -------------
         * **Local Storage**: Store backups on local filesystem or network-mounted drives
         * **SFTP Remote Storage**: Securely transfer backups to remote servers via SSH/SFTP
-        * **Backup Formats**: ZIP archives (with filestore) or PostgreSQL dumps
+        * **Backup Formats**: ZIP archives with or without filestore, or PostgreSQL dumps
         * **Integrity Verification**: Automatic verification after backup creation
         * **Flexible Scheduling**: Automated backups via configurable cron jobs
         * **Retention Policies**: Keep last N backups or retain for N days
@@ -42,21 +42,14 @@
 
         Security Note: list_db and database dumps
         -----------------------------------------
-        To keep scheduled backups working when web database management is
-        disabled, this module performs its dump using an internal routine that
-        intentionally does NOT apply Odoo's ``@check_db_management_enabled``
-        gate. As a result, a full database dump can still be produced even when
-        ``list_db = False`` is set in ``odoo.conf``. Access is instead enforced
+        The module uses an internal dump routine compatible with Odoo 20's
+        ``odoo.modules.db.dump``. A full database dump can still be produced
+        when ``list_db = False`` is set in ``odoo.conf``. Access is enforced
         by requiring the Backup Administrator group, so setting
         ``list_db = False`` alone is not sufficient to prevent dumps via this
         module — restrict membership of the backup administrator group
         accordingly.
 
-        Need Multi-Cloud Storage?
-        -------------------------
-        Upgrade to Database Ultimate Backup (Full) for enterprise multi-cloud support:
-        AWS S3, Azure Blob Storage, Google Cloud Storage, DigitalOcean Spaces,
-        parallel uploads, server-side encryption, and more!
     """,
 
     'author': "René Hechavarría",
@@ -65,7 +58,7 @@
     'support': "reneluishs@gmail.com",
 
     'category': 'Administration',
-    'version': '19.0.1.4.2',
+    'version': '20.0.1.0.0',
 
     # Module dependencies
     'depends': ['base'],
@@ -79,7 +72,7 @@
     'data': [
         # Security
         'security/backup_security.xml',
-        'security/ir.model.access.csv',
+        'security/ir.access.csv',
 
         # Data
         'data/backup_cron.xml',
@@ -89,7 +82,6 @@
         'views/backup_config_views.xml',
         'views/backup_job_views.xml',
         'views/backup_provider_views.xml',
-        'views/backup_upgrade_teaser_views.xml',
         'views/menus.xml'
     ],
 

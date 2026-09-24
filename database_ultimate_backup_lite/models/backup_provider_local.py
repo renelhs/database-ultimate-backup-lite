@@ -67,6 +67,7 @@ class BackupProviderLocal(models.Model):
     def test_connection(self):
         """Test local directory access and permissions."""
         self.ensure_one()
+        self.check_access('write')
         
         try:
             # Check if directory exists
@@ -115,6 +116,7 @@ class BackupProviderLocal(models.Model):
     def upload_backup(self, backup_file_path, remote_filename):
         """Copy backup file to local directory."""
         self.ensure_one()
+        self.check_access('write')
         
         try:
             # Determine target directory
@@ -167,6 +169,7 @@ class BackupProviderLocal(models.Model):
     def download_backup(self, remote_filename, local_path):
         """Copy backup file from local directory to specified path."""
         self.ensure_one()
+        self.check_access('write')
         
         try:
             # Find the backup file
@@ -195,6 +198,7 @@ class BackupProviderLocal(models.Model):
     def list_backups(self, prefix=None):
         """List backup files in local directory."""
         self.ensure_one()
+        self.check_access('write')
         
         try:
             backups = []
@@ -238,6 +242,7 @@ class BackupProviderLocal(models.Model):
     def delete_backup(self, remote_filename):
         """Delete backup file from local directory."""
         self.ensure_one()
+        self.check_access('write')
         
         try:
             backup_file_path = self._find_backup_file(remote_filename)
@@ -263,6 +268,7 @@ class BackupProviderLocal(models.Model):
     def get_storage_info(self):
         """Get local storage information."""
         self.ensure_one()
+        self.check_access('write')
         
         try:
             # Get directory size

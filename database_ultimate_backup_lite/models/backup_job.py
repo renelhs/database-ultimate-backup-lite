@@ -13,6 +13,7 @@ import zipfile
 import logging
 
 import odoo.release
+import odoo.modules.db
 import odoo.sql_db
 from odoo import models, fields, api, tools
 from odoo.exceptions import UserError, AccessDenied
@@ -49,6 +50,12 @@ class BackupJob(models.Model):
         ('zip', 'ZIP Archive'),
         ('dump', 'PostgreSQL Dump'),
     ], string='Backup Format', required=True)
+    include_filestore = fields.Boolean(
+        string='Includes Filestore',
+        default=True,
+        readonly=True,
+        help='Whether this ZIP backup includes attachments from the filestore.'
+    )
     is_manual = fields.Boolean(
         string='Manual Backup',
         default=False,
@@ -212,6 +219,11 @@ class BackupJob(models.Model):
 
         self._log("Starting backup process")
 
+        # A PostgreSQL custom dump never contains a filestore, including when
+        # a job is created directly rather than through a backup configuration.
+        if self.backup_format == 'dump':
+            self.include_filestore = False
+
         # Generate backup filename (no I/O, safe before mkdtemp)
         self.backup_filename = self._generate_backup_filename()
 
@@ -230,6 +242,11 @@ class BackupJob(models.Model):
             size_bytes = os.path.getsize(backup_file_path)
             self.backup_size_mb = size_bytes / (1024 * 1024)
             self._log(f"Backup file created: {backup_file_path} ({tools.human_size(size_bytes)})")
+
+            # Verification is optional, but an empty backup can never be
+            # uploaded or reported as successful.
+            if size_bytes == 0:
+                raise UserError("Backup file is empty (the dump produced no output).")
 
             # Verify backup integrity if enabled
             if self.config_id.verify_backups:
@@ -382,16 +399,10 @@ class BackupJob(models.Model):
         """
         Create database dump.
 
-        Uses an internal dump implementation that replicates Odoo's
-        ``odoo.service.db.dump_db`` logic without the
-        ``@check_db_management_enabled`` decorator.  This allows backups
-        to work even when ``list_db = False`` is set in odoo.conf.
-
-        Security note: because this bypasses ``@check_db_management_enabled``,
-        a full database dump can be produced even when the administrator has
-        disabled web database management via ``list_db = False``. Authorization
-        is therefore enforced here against backup-admin group membership (see
-        the check below) rather than relying on Odoo's db-management gate.
+        Uses an internal implementation compatible with Odoo 20's
+        ``odoo.modules.db.dump``. A full database dump can be produced even
+        when web database management is disabled via ``list_db = False``.
+        Authorization is therefore enforced against backup-admin membership.
         """
         # Authorization check: a database dump is a full export of the data and
         # must be restricted to the backup system (cron) or a backup
@@ -424,21 +435,23 @@ class BackupJob(models.Model):
         self._log(f"Creating {self.backup_format} dump of database: {self.database_name}")
 
         try:
-            self._dump_db(self.database_name, stream, self.backup_format)
+            self._dump_db(
+                self.database_name, stream, self.backup_format,
+                with_filestore=self.include_filestore,
+            )
             self._log("Database dump created successfully")
         except Exception as e:
             self._log(f"Database dump failed: {str(e)}")
             raise UserError(f"Database backup failed: {str(e)}")
 
     # ------------------------------------------------------------------
-    # Internal dump helpers (mirror odoo.service.db without decorator)
+    # Internal dump helpers (compatible with odoo.modules.db.dump)
     # ------------------------------------------------------------------
 
     def _dump_db_manifest(self, cr):
         """Generate the manifest dict for a ZIP backup.
 
-        Replicates ``odoo.service.db.dump_db_manifest`` so that we are
-        not affected by the ``@check_db_management_enabled`` decorator.
+        Matches the layout from ``odoo.modules.db._dump_db_manifest``.
         """
         pg_version = "%d.%d" % divmod(cr._obj.connection.server_version / 100, 100)
         cr.execute("SELECT name, latest_version FROM ir_module_module WHERE state = 'installed'")
@@ -453,15 +466,20 @@ class BackupJob(models.Model):
             'modules': modules,
         }
 
-    def _dump_db(self, db_name, stream, backup_format='zip'):
+    def _dump_db(self, db_name, stream, backup_format='zip', with_filestore=True):
         """Dump *db_name* into the file-like *stream*.
 
-        This is a faithful copy of ``odoo.service.db.dump_db`` **without**
-        the ``@check_db_management_enabled`` decorator so that backups
-        work regardless of the ``list_db`` setting.
+        Based on ``odoo.modules.db.dump``, with direct filestore streaming for
+        ZIP backups. Backups work regardless of the ``list_db`` setting.
         """
+        if backup_format not in ('zip', 'dump'):
+            raise ValueError(f"unknown backup_format: {backup_format!r}")
+        if not odoo.modules.db.exist(db_name):
+            raise ValueError(f"Database {db_name!r} doesn't exist")
+
         _logger.info(
-            'DUMP DB: %s format %s with filestore', db_name, backup_format,
+            'DUMP DB: %s format %s %s filestore', db_name, backup_format,
+            'with' if backup_format == 'zip' and with_filestore else 'without',
         )
 
         cmd = [find_pg_tool('pg_dump'), '--no-owner', db_name]
@@ -474,10 +492,10 @@ class BackupJob(models.Model):
             # the directory under /tmp. _safe_rmtree logs the failure reason,
             # then retries with ignore_errors so we still clean up what we can.
             #
-            # The temp dir holds only dump.sql + manifest.json (small). The
-            # filestore is streamed straight into the archive from its live
-            # location by _write_backup_zip — we do NOT copy it here first.
-            # Odoo's stock dump_db copies the filestore into the temp dir before
+            # The temp dir holds only dump.sql + manifest.json (small). When
+            # requested, _write_backup_zip streams the filestore from its live
+            # location rather than copying it here first.
+            # Odoo's stock dump copies the filestore into the temp dir before
             # zipping, which makes it exist twice on disk at peak (a full copy
             # under /tmp *and* inside the growing zip). On a shared/contended
             # disk that doubled footprint is exactly what runs /tmp out of space.
@@ -485,42 +503,65 @@ class BackupJob(models.Model):
             self._mark_temp_dir_owner(dump_dir)
             try:
                 # Generate manifest
-                with open(os.path.join(dump_dir, 'manifest.json'), 'w') as fh:
+                with open(os.path.join(dump_dir, 'manifest.json'), 'w', encoding='utf-8') as fh:
                     db = odoo.sql_db.db_connect(db_name)
                     with db.cursor() as cr:
                         json.dump(self._dump_db_manifest(cr), fh, indent=4)
 
                 # Run pg_dump -> dump.sql (kept in the temp dir)
                 cmd.insert(-1, '--file=' + os.path.join(dump_dir, 'dump.sql'))
-                subprocess.run(
+                result = subprocess.run(
                     cmd, env=env,
                     stdout=subprocess.DEVNULL,
-                    stderr=subprocess.STDOUT,
-                    check=True,
+                    stderr=subprocess.PIPE,
                 )
+                if result.returncode != 0:
+                    err = result.stderr.decode(errors='replace').strip()
+                    raise UserError(
+                        "pg_dump failed (exit %d): %s"
+                        % (result.returncode, err or "no error output")
+                    )
 
                 # Build the zip directly into the output stream
-                self._write_backup_zip(stream, dump_dir, db_name)
+                self._write_backup_zip(stream, dump_dir, db_name, with_filestore)
             finally:
                 self._safe_rmtree(dump_dir, label='dump_dir')
         else:
             cmd.insert(-1, '--format=c')
-            stdout = subprocess.Popen(
-                cmd, env=env,
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.PIPE,
-            ).stdout
-            shutil.copyfileobj(stdout, stream)
+            # stderr uses a file so it cannot block a large stdout stream.
+            with tempfile.TemporaryFile() as stderr_file:
+                proc = subprocess.Popen(
+                    cmd, env=env,
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.PIPE,
+                    stderr=stderr_file,
+                )
+                try:
+                    shutil.copyfileobj(proc.stdout, stream)
+                except BaseException:
+                    if proc.poll() is None:
+                        proc.kill()
+                    proc.wait()
+                    raise
+                finally:
+                    proc.stdout.close()
+                returncode = proc.wait()
+                if returncode != 0:
+                    stderr_file.seek(0)
+                    err = stderr_file.read().decode(errors='replace').strip()
+                    raise UserError(
+                        "pg_dump failed (exit %d): %s"
+                        % (returncode, err or "no error output")
+                    )
 
-    def _write_backup_zip(self, stream, dump_dir, db_name):
+    def _write_backup_zip(self, stream, dump_dir, db_name, with_filestore=True):
         """Write a restore-compatible backup zip into *stream*.
 
-        Layout matches Odoo's ``dump_db`` exactly so the archive restores
+        Layout matches Odoo's ``dump`` so the archive restores
         through the standard path: ``dump.sql`` first (so a restore can read it
         without scanning the whole archive — the ordering Odoo's ``fnct_sort``
-        guarantees), then ``manifest.json``, then the filestore under
-        ``filestore/``. Unlike ``dump_db`` the filestore is read from its live
-        location instead of a temp copy.
+        guarantees), then ``manifest.json``. When requested, filestore entries
+        appear under ``filestore/`` and are read from their live location.
 
         Compression strategy: dump.sql and manifest.json are DEFLATEd (text,
         compresses well). Filestore entries are STOREd: attachments are
@@ -534,7 +575,7 @@ class BackupJob(models.Model):
         allowZip64 is mandatory: real filestores routinely exceed the 4 GiB
         ZIP32 limit.
         """
-        filestore = odoo.tools.config.filestore(db_name)
+        filestore = odoo.tools.config.filestore(db_name) if with_filestore else None
         with zipfile.ZipFile(
             stream, 'w', compression=zipfile.ZIP_STORED, allowZip64=True,
         ) as zf:
@@ -546,16 +587,24 @@ class BackupJob(models.Model):
                 os.path.join(dump_dir, 'manifest.json'), 'manifest.json',
                 compress_type=zipfile.ZIP_DEFLATED,
             )
-            if not os.path.exists(filestore):
+            if not with_filestore or not os.path.exists(filestore):
                 return
+            filestore_root = os.path.realpath(filestore)
             for dirpath, _dirnames, filenames in os.walk(filestore):
                 for fname in filenames:
                     fpath = os.path.join(dirpath, fname)
                     arcname = os.path.join(
                         'filestore', os.path.relpath(fpath, filestore),
                     )
+                    real_fpath = os.path.realpath(fpath)
                     try:
-                        zf.write(fpath, arcname)
+                        if (not os.path.isfile(real_fpath) or
+                                os.path.commonpath((filestore_root, real_fpath)) != filestore_root):
+                            continue
+                    except ValueError:
+                        continue
+                    try:
+                        zf.write(real_fpath, arcname)
                     except FileNotFoundError:
                         # The attachment was unlinked (gc/vacuum) between
                         # os.walk listing it and us reading it. It is no longer
@@ -598,8 +647,10 @@ class BackupJob(models.Model):
         """Verify ZIP backup integrity."""
         try:
             with zipfile.ZipFile(backup_file_path, 'r') as zip_file:
-                # Test ZIP file integrity
-                zip_file.testzip()
+                # testzip returns the first corrupt member instead of raising.
+                corrupt_member = zip_file.testzip()
+                if corrupt_member:
+                    raise UserError(f"ZIP backup contains a corrupt file: {corrupt_member}")
                 
                 # Check required files
                 file_list = zip_file.namelist()

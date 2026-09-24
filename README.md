@@ -1,17 +1,17 @@
-# Database Ultimate Backup Lite for Odoo 19.0
+# Database Ultimate Backup Lite for Odoo 20.0
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Odoo Version](https://img.shields.io/badge/Odoo-19.0-brightgreen.svg)](https://www.odoo.com)
+[![Odoo Version](https://img.shields.io/badge/Odoo-20.0-brightgreen.svg)](https://www.odoo.com)
 [![Price](https://img.shields.io/badge/Price-Free-green.svg)]()
 
-A free, reliable database backup solution for Odoo 19.0 with **local and SFTP remote storage**, automated scheduling, retention policies, and comprehensive monitoring.
+A free, reliable database backup solution for Odoo 20.0 with **local and SFTP remote storage**, automated scheduling, retention policies, and comprehensive monitoring.
 
 ## Features
 
 ### Core Capabilities
 - **Local Storage**: Store backups on local filesystem or network-mounted drives
 - **SFTP Remote Storage**: Securely transfer backups to remote servers via SSH/SFTP
-- **Backup Formats**: ZIP archives (with filestore) or PostgreSQL dumps
+- **Backup Formats**: ZIP archives with or without filestore, or PostgreSQL dumps
 - **Integrity Verification**: Automatic verification of backup files after creation
 - **Flexible Scheduling**: Automated backups via cron jobs with configurable intervals
 
@@ -103,7 +103,8 @@ Navigate to **Database Ultimate Backup Lite > Backup Configurations > Create**
 ```
 Name: Daily Production Backup
 Database: [automatically populated with current database]
-Backup Format: ZIP Archive (includes filestore)
+Backup Format: ZIP Archive
+Include Filestore: Yes
 
 Storage Providers:
 - Select your local and/or SFTP storage providers
@@ -145,8 +146,11 @@ To customize the schedule:
 
 | Format | Description | Use Case |
 |--------|-------------|----------|
-| **ZIP Archive** | Complete backup including database and filestore | Full system backups, recommended for production |
-| **PostgreSQL Dump** | SQL dump only, no filestore | Database-only backups, smaller file size |
+| **ZIP Archive + filestore** | Complete backup including database and attachments | Full system backups, recommended for production |
+| **ZIP Archive without filestore** | Database backup packaged as a ZIP without attachments | Smaller ZIP backups when attachments are backed up separately |
+| **PostgreSQL Dump** | PostgreSQL custom-format dump, no filestore | Database-only backup restored with `pg_restore` |
+
+Odoo 20's database manager accepts ZIP backups. Restore a `.dump` file into an empty database with `pg_restore --no-owner --dbname=restored_db backup.dump`. Custom dumps contain no filestore, so restore matching file-backed attachments separately if needed.
 
 ### Retention Policies
 
@@ -218,10 +222,10 @@ This module is licensed under the MIT License. See [LICENSE](LICENSE) file for d
 - René Hechavarría
 
 ### Built With
-- Odoo 19.0 Community/Enterprise Framework
+- Odoo 20.0 Community/Enterprise Framework
 - AsyncSSH for high-performance SFTP transfers
 - Strategy design pattern for extensibility
 
 ---
 
-**Database Ultimate Backup Lite** - Free local & SFTP backup solution for Odoo 19.0
+**Database Ultimate Backup Lite** - Free local & SFTP backup solution for Odoo 20.0
