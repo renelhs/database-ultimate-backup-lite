@@ -55,7 +55,6 @@
     'author': "René Hechavarría",
     'website': "https://github.com/renelhs",
     'maintainer': "René Hechavarría",
-    'support': "reneluishs@gmail.com",
 
     'category': 'Administration',
     'version': '20.0.1.0.0',
