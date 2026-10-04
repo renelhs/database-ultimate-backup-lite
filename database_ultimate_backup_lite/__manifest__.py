@@ -15,7 +15,7 @@
         -------------
         * **Local Storage**: Store backups on local filesystem or network-mounted drives
         * **SFTP Remote Storage**: Securely transfer backups to remote servers via SSH/SFTP
-        * **Backup Formats**: ZIP archives (with filestore) or PostgreSQL dumps
+        * **Backup Formats**: ZIP archives with or without filestore, or PostgreSQL custom dumps
         * **Integrity Verification**: Automatic verification after backup creation
         * **Flexible Scheduling**: Automated backups via configurable cron jobs
         * **Retention Policies**: Keep last N backups or retain for N days
@@ -52,11 +52,6 @@
         module — restrict membership of the backup administrator group
         accordingly.
 
-        Need Multi-Cloud Storage?
-        -------------------------
-        Upgrade to Database Ultimate Backup (Full) for enterprise multi-cloud support:
-        AWS S3, Azure Blob Storage, Google Cloud Storage, DigitalOcean Spaces,
-        parallel uploads, server-side encryption, and more!
     """,
 
     'author': "René Hechavarría",
@@ -64,7 +59,7 @@
     'maintainer': "René Hechavarría",
 
     'category': 'Administration',
-    'version': '19.0.1.4.2',
+    'version': '19.0.1.5.0',
 
     # Module dependencies
     'depends': ['base'],
@@ -88,7 +83,6 @@
         'views/backup_config_views.xml',
         'views/backup_job_views.xml',
         'views/backup_provider_views.xml',
-        'views/backup_upgrade_teaser_views.xml',
         'views/menus.xml'
     ],
 

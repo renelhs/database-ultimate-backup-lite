@@ -5,6 +5,44 @@ All notable changes to the Database Ultimate Backup Lite module will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [19.0.1.5.0] - 2026-10-04
+
+### Added
+
+- Optional filestore inclusion for ZIP backups, enabled by default and recorded
+  on each backup job. Existing ZIP jobs retain their original filestore policy;
+  PostgreSQL custom dumps are marked as excluding the filestore.
+
+### Fixed
+
+- Reject failed `pg_dump` processes and report their error output, including
+  custom dumps that produced partial content. Reject empty backups even when
+  optional integrity verification is disabled.
+- Detect corrupt ZIP members returned by `testzip()` before uploading backups.
+- Preserve partial-upload warnings in configuration statistics, UI notifications,
+  and email alerts instead of reporting complete success.
+- Correct the failed-backup search filter and use the Odoo 19 display-name API
+  for provider labels.
+- Allow Backup Administrators to run backups without also granting access to
+  technical Scheduled Actions settings.
+
+### Security
+
+- Check write access before storage operations, connection tests, and retention
+  actions. Restrict SFTP password access and action buttons to Backup Administrators.
+- Exclude filestore symlinks that resolve outside the filestore root.
+
+### Changed
+
+- Refresh the app icon, banner, store layout, and screenshots for Odoo 19 while
+  preserving prior release notes.
+- Remove the Full-edition dashboard and cloud-provider preview menus, actions,
+  and transient model. Keep unobtrusive notes in storage and notification
+  settings, plus the edition comparison and Full-edition link on the store page.
+- Limit AsyncSSH to versions below 2.24 for compatibility.
+
+---
+
 ## [19.0.1.4.2] - 2026-06-26
 
 ### Changed

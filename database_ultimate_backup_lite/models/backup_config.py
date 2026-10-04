@@ -45,10 +45,15 @@ class BackupConfig(models.Model):
         help='Name of the database to backup'
     )
     backup_format = fields.Selection([
-        ('zip', 'ZIP Archive (includes filestore)'),
-        ('dump', 'PostgreSQL Dump (SQL only)'),
+        ('zip', 'ZIP Archive'),
+        ('dump', 'PostgreSQL Dump (custom format, no filestore)'),
     ], string='Backup Format', required=True, default='zip',
        help='Format of the backup file')
+    include_filestore = fields.Boolean(
+        string='Include Filestore',
+        default=True,
+        help='Include attachments in ZIP backups. PostgreSQL dumps never include the filestore.'
+    )
     
     # Storage providers
     local_provider_ids = fields.Many2many(
@@ -102,7 +107,7 @@ class BackupConfig(models.Model):
     notify_failure = fields.Boolean(
         string='Notify on Failure',
         default=True,
-        help='Send notification when backup fails'
+        help='Send notification when the backup fails or some storage destinations fail'
     )
     notification_emails = fields.Char(
         string='Notification Emails',
@@ -170,6 +175,7 @@ class BackupConfig(models.Model):
         This method creates a new backup job and processes it.
         """
         self.ensure_one()
+        self.check_access('write')
         
         if not self.active:
             raise UserError("Cannot create backup: configuration is inactive")
@@ -183,6 +189,7 @@ class BackupConfig(models.Model):
             'config_id': self.id,
             'database_name': self.database_name,
             'backup_format': self.backup_format,
+            'include_filestore': self.backup_format == 'zip' and self.include_filestore,
             'status': 'running',
             'start_time': fields.Datetime.now(),
             'is_manual': is_manual,  # Flag to indicate execution type
@@ -196,7 +203,9 @@ class BackupConfig(models.Model):
             self._update_backup_statistics(result)
             
             # Send notifications if needed
-            if result.get('success') and self.notify_success:
+            if backup_job.status == 'warning' and self.notify_failure:
+                self._send_notification(backup_job, 'warning')
+            elif backup_job.status == 'success' and self.notify_success:
                 self._send_notification(backup_job, 'success')
             elif not result.get('success') and self.notify_failure:
                 self._send_notification(backup_job, 'failure')
@@ -206,14 +215,15 @@ class BackupConfig(models.Model):
             if self.env.context.get('manual_execution', True):
                 # Show user notification based on result
                 if result.get('success'):
+                    has_warnings = backup_job.status == 'warning'
                     return {
                         'type': 'ir.actions.client',
                         'tag': 'display_notification',
                         'params': {
-                            'title': 'Backup Successful',
-                            'message': f"Backup '{backup_job.backup_filename}' created successfully.",
-                            'type': 'success',
-                            'sticky': False,
+                            'title': 'Backup Completed with Warnings' if has_warnings else 'Backup Successful',
+                            'message': result.get('message') if has_warnings else f"Backup '{backup_job.backup_filename}' created successfully.",
+                            'type': 'warning' if has_warnings else 'success',
+                            'sticky': has_warnings,
                         }
                     }
                 else:
@@ -250,7 +260,7 @@ class BackupConfig(models.Model):
                 self._send_notification(backup_job, 'failure')
             
             # Return appropriate response based on context
-            if self._context.get('manual_execution', True):
+            if self.env.context.get('manual_execution', True):
                 # Show error notification to user instead of raising
                 return {
                     'type': 'ir.actions.client',
@@ -269,6 +279,7 @@ class BackupConfig(models.Model):
     def test_providers(self):
         """Test all configured providers."""
         self.ensure_one()
+        self.check_access('write')
         
         if not self.all_providers:
             raise UserError("No storage providers configured")
@@ -334,6 +345,7 @@ class BackupConfig(models.Model):
     def test_retention_policy(self):
         """Test retention policy without actually deleting backups."""
         self.ensure_one()
+        self.check_access('write')
         
         results = []
         
@@ -403,8 +415,9 @@ class BackupConfig(models.Model):
     def cleanup_old_backups(self):
         """Clean up old backups according to retention policy."""
         self.ensure_one()
+        self.check_access('write')
         
-        is_manual = self._context.get('manual_execution', True)
+        is_manual = self.env.context.get('manual_execution', True)
         results = []
         total_deleted = 0
         
@@ -527,7 +540,8 @@ class BackupConfig(models.Model):
     
     def _update_backup_statistics(self, result):
         """Update backup statistics after a backup operation."""
-        status = 'success' if result.get('success') else 'error'
+        backup_job = result.get('backup_job')
+        status = backup_job.status if backup_job else ('success' if result.get('success') else 'error')
         message = result.get('message', 'Unknown result')
         
         vals = {
@@ -563,6 +577,14 @@ class BackupConfig(models.Model):
             if notification_type == 'success':
                 subject = "Backup Successful: %s" % self.name
                 body = self._get_success_notification_body(backup_job)
+            elif notification_type == 'warning':
+                subject = "Backup Completed with Warnings: %s" % self.name
+                body = (
+                    "The backup was created, but some storage destinations failed.\n\n"
+                    "Configuration: %s\nDatabase: %s\nBackup: %s\n\nDetails: %s"
+                    % (self.name, backup_job.database_name, backup_job.backup_filename,
+                       backup_job.error_message)
+                )
             else:
                 subject = "Backup Failed: %s" % self.name
                 body = self._get_failure_notification_body(backup_job)

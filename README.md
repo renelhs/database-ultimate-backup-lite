@@ -11,7 +11,7 @@ A free, reliable database backup solution for Odoo 19.0 with **local and SFTP re
 ### Core Capabilities
 - **Local Storage**: Store backups on local filesystem or network-mounted drives
 - **SFTP Remote Storage**: Securely transfer backups to remote servers via SSH/SFTP
-- **Backup Formats**: ZIP archives (with filestore) or PostgreSQL dumps
+- **Backup Formats**: ZIP archives with or without filestore, or PostgreSQL custom dumps
 - **Integrity Verification**: Automatic verification of backup files after creation
 - **Flexible Scheduling**: Automated backups via cron jobs with configurable intervals
 
@@ -46,7 +46,7 @@ A free, reliable database backup solution for Odoo 19.0 with **local and SFTP re
 ### 1. Install Dependencies
 
 ```bash
-pip install asyncssh
+pip install "asyncssh<2.24"
 ```
 
 ### 2. Install the Module
@@ -103,7 +103,8 @@ Navigate to **Database Ultimate Backup Lite > Backup Configurations > Create**
 ```
 Name: Daily Production Backup
 Database: [automatically populated with current database]
-Backup Format: ZIP Archive (includes filestore)
+Backup Format: ZIP Archive
+Include Filestore: Yes
 
 Storage Providers:
 - Select your local and/or SFTP storage providers
@@ -145,8 +146,15 @@ To customize the schedule:
 
 | Format | Description | Use Case |
 |--------|-------------|----------|
-| **ZIP Archive** | Complete backup including database and filestore | Full system backups, recommended for production |
-| **PostgreSQL Dump** | SQL dump only, no filestore | Database-only backups, smaller file size |
+| **ZIP Archive + filestore** | Database and file-backed attachments | Full system backups, recommended for production |
+| **ZIP Archive without filestore** | Database packaged as ZIP, without file-backed attachments | Smaller backups when the filestore is backed up separately |
+| **PostgreSQL Dump** | PostgreSQL custom-format dump, no filestore | Database-only backups |
+
+Odoo 19's database manager can restore both ZIP backups and PostgreSQL custom dumps. Custom dumps can also be restored with `pg_restore --no-owner --dbname=restored_db backup.dump` into an empty database. Backups without the filestore cannot recover file-backed attachments; restore the matching filestore separately if needed.
+
+**Include Filestore** is enabled by default and applies only to ZIP backups. Each job records its own selection, so changing a configuration does not rewrite the backup history. Updating from an earlier release preserves the existing ZIP-with-filestore behavior.
+
+Only Backup Administrators can run backups, test connections, transfer or delete backup files, and read SFTP passwords. Backup Users retain read-only access to configurations and job history. A backup with failed destinations is shown as a warning and uses the failure-notification setting.
 
 ### Retention Policies
 
@@ -178,7 +186,7 @@ Customize backup filenames using variables:
 - Run cleanup manually to free space
 
 **"AsyncSSH library not found"**
-- Install the required dependency: `pip install asyncssh`
+- Install the required dependency: `pip install "asyncssh<2.24"`
 - Restart the Odoo service after installation
 
 **"SFTP connection failed"**

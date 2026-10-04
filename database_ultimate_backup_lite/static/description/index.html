@@ -10,8 +10,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
           rel="stylesheet">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
     <style>
         :root {
             --primary-color: #667eea;
@@ -59,240 +57,126 @@
             margin: 5px 0;
             display: block;
         }
+
+        .feature-icon {
+            display: block;
+            width: 84px;
+            height: 84px;
+            flex: none;
+        }
+
+        .storage-provider-card {
+            height: 100%;
+            padding: 24px;
+            border: 1px solid #e2e7f0;
+            border-radius: 12px;
+            background: #fff;
+            text-align: center;
+        }
+
+        .storage-provider-card img {
+            display: block;
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 14px;
+        }
     </style>
 </head>
 <body>
 <!-- overview -->
 <div class="container">
-    <div class="my-5">
+    <div class="my-4">
         <div class="tab-content" id="descriptionTabContent">
             <!-- description -->
             <div class="tab-pane fade show active" id="home" role="tabpanel"
                  aria-labelledby="home-tab">
-                <div class="position-relative"
-                     style="border-radius: 16px; background-color: #f8f8f8; padding: 20px 0;">
-                    <div class="row " style="padding: 2rem 0rem 0 !important;">
-                        <div class="col-lg-8 mx-auto gap-4 d-flex flex-column align-items-center">
-                            <p class="my-1 text-center text-uppercase"
-                               style="letter-spacing: 4px !important; color: #667eea; font-weight: bold; text-align: center; font-size: 14px; font-weight: 600; line-height: 15.96px; text-transform: uppercase;">
-                                Free Local &amp; SFTP Backup Solution
-                            </p>
-                            <h1 class="text-center text-uppercase my-0"
-                                style="color: #121212; font-size: 46px; font-weight: 700; line-height: normal;">
-                                Database Ultimate Backup <span style="color: #667eea;">Lite</span>
-                            </h1>
-                            <p class="text-center" style="color: #64728f; font-size: 18px; max-width: 600px;">
-                                Back up your Odoo database locally or to any remote server via SFTP.
-                            </p>
-                        </div>
-                        <div class="d-flex justify-content-center mt-4">
-                            <div style="text-align: center;">
-                                <div style="background-color: #667eea; color: white; padding: 20px; border-radius: 10px; margin: 20px auto; max-width: 800px;">
-                                    <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
-                                        <div style="margin: 10px 15px; text-align: center;">
-                                            <div style="font-size: 2em;">🗄️</div>
-                                            <div style="font-weight: 600; margin-top: 5px;">Local Storage</div>
-                                        </div>
-                                        <div style="margin: 10px 15px; text-align: center;">
-                                            <div style="font-size: 2em;">🔒</div>
-                                            <div style="font-weight: 600; margin-top: 5px;">SFTP Remote</div>
-                                        </div>
-                                        <div style="margin: 10px 15px; text-align: center;">
-                                            <div style="font-size: 2em;">🔄</div>
-                                            <div style="font-weight: 600; margin-top: 5px;">Automated Backups</div>
-                                        </div>
-                                        <div style="margin: 10px 15px; text-align: center;">
-                                            <div style="font-size: 2em;">🛡️</div>
-                                            <div style="font-weight: 600; margin-top: 5px;">Integrity Verification</div>
-                                        </div>
-                                        <div style="margin: 10px 15px; text-align: center;">
-                                            <div style="font-size: 2em;">📧</div>
-                                            <div style="font-weight: 600; margin-top: 5px;">Email Notifications</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Platform availability -->
-                <div class="my-5">
-                    <div style="background-color: #f8f8f8; border-radius: 16px; padding: 40px 30px;">
-                        <h2 class="text-center text-uppercase"
-                            style="font-family: Montserrat, 'sans-serif'; font-size: 32px; color: #667eea; font-weight: 800; margin-bottom: 8px;">
-                            Platform Availability
-                        </h2>
-                        <p class="text-center" style="color: #64728f; font-size: 16px; max-width: 640px; margin: 0 auto 30px;">
-                            Where the Lite edition's backups actually run.
-                        </p>
-                        <div class="row justify-content-center" style="display: flex; flex-wrap: wrap; gap: 20px 0;">
-                            <div class="col-md-4 col-sm-12">
-                                <div style="background-color: #fff; border-radius: 12px; padding: 28px 20px; text-align: center; height: 100%; border: 1px solid #e3e3e3; border-top: 4px solid #22c55e;">
-                                    <div style="font-size: 2.4em;">🖥️</div>
-                                    <h3 style="font-family: Montserrat; font-weight: 700; font-size: 20px; color: #121212; margin: 12px 0 6px;">On Premise</h3>
-                                    <div style="color: #22c55e; font-weight: 700; font-size: 18px;">✔ Supported</div>
-                                    <p style="color: #64728f; font-size: 14px; margin-top: 10px; margin-bottom: 0;">Full Local &amp; SFTP backups on self-hosted Odoo.</p>
-                                </div>
-                            </div>
-                            <div class="col-md-4 col-sm-12">
-                                <div style="background-color: #fff; border-radius: 12px; padding: 28px 20px; text-align: center; height: 100%; border: 1px solid #e3e3e3; border-top: 4px solid #ef4444;">
-                                    <div style="font-size: 2.4em; filter: grayscale(1); opacity: 0.65;">☁️</div>
-                                    <h3 style="font-family: Montserrat; font-weight: 700; font-size: 20px; color: #121212; margin: 12px 0 6px;">Odoo Online</h3>
-                                    <div style="color: #ef4444; font-weight: 700; font-size: 18px;">✘ Not available</div>
-                                    <p style="color: #64728f; font-size: 14px; margin-top: 10px; margin-bottom: 0;">Odoo Online (SaaS) does not allow installing third-party modules.</p>
-                                </div>
-                            </div>
-                            <div class="col-md-4 col-sm-12">
-                                <div style="background-color: #fff; border-radius: 12px; padding: 28px 20px; text-align: center; height: 100%; border: 1px solid #e3e3e3; border-top: 4px solid #ef4444;">
-                                    <div style="font-size: 2.4em; filter: grayscale(1); opacity: 0.65;">⚙️</div>
-                                    <h3 style="font-family: Montserrat; font-weight: 700; font-size: 20px; color: #121212; margin: 12px 0 6px;">Odoo.sh</h3>
-                                    <div style="color: #ef4444; font-weight: 700; font-size: 18px;">✘ Not supported</div>
-                                    <p style="color: #64728f; font-size: 14px; margin-top: 10px; margin-bottom: 0;">Odoo.sh blocks <code>pg_dump</code> for tenant databases. Odoo.sh backups require the Full edition.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="background-color: #667eea; border-radius: 12px; padding: 18px 24px; margin-top: 28px; text-align: center;">
-                            <p style="color: #fff; font-size: 15px; margin: 0;">
-                                <strong>Running on Odoo.sh?</strong> The Lite edition cannot create backups there because the platform blocks <code style="background-color: #535ec9; color: #fff; padding: 1px 6px; border-radius: 4px;">pg_dump</code>.
-                                Upgrade to <strong>Database Ultimate Backup (Full)</strong>, which ships native Odoo.sh backup support.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Overview section -->
-                <div class="my-5">
-                    <div class="position-relative"
-                         style="padding: 5rem 4rem 5rem 4rem; background-color: #0A1425; border-radius: 12px;">
-                        <div class="d-flex flex-column gap-4">
-                            <span class="wrapper-subtitle"
-                                  style="font-size: 40px; font-weight: 700; color: #fff;line-height: 60px; text-transform: capitalize; max-width: 600px; font-family: Montserrat;">
-                                Database Ultimate Backup Lite
-                            </span>
-                            <h3 class="wrapper-details"
-                                style="font-size: 20px; font-weight: 400; color: #fff; line-height: 32px;">
-                                Free, reliable database backup solution designed for Odoo 19.0.
-                                <br>Automated local &amp; SFTP remote backups with retention policies, integrity verification, and monitoring!
-                            </h3>
-                        </div>
-                        <div class="position-absolute bottom-0 end-0">
-                        </div>
+                <div style="padding: clamp(28px, 4vw, 50px); background-color: #0A1425; border-radius: 16px;">
+                    <p style="margin: 0 0 12px; color: #B9C5FF; font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;">
+                        Database Ultimate Backup Lite · Odoo 19
+                    </p>
+                    <h1 style="margin: 0 0 14px; color: #fff; font-size: clamp(30px, 4vw, 44px); font-weight: 700; line-height: 1.18;">
+                        Keep every backup under control.
+                    </h1>
+                    <p style="max-width: 760px; margin: 0 0 22px; color: #E0E6FA; font-size: clamp(16px, 1.8vw, 19px); line-height: 1.55;">
+                        Schedule verified Odoo backups to local storage or SFTP, with retention policies, job history, and email alerts.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span style="display:inline-block; padding:8px 13px; border:1px solid #6475BF; border-radius:30px; color:#fff; font-size:13px;">Free</span>
+                        <span style="display:inline-block; padding:8px 13px; border:1px solid #6475BF; border-radius:30px; color:#fff; font-size:13px;">Local &amp; SFTP</span>
+                        <span style="display:inline-block; padding:8px 13px; border:1px solid #6475BF; border-radius:30px; color:#fff; font-size:13px;">Scheduled &amp; verified</span>
                     </div>
                 </div>
 
                 <!-- key-highlight -->
-                <div class="mt64 mb64">
+                <div class="my-4">
                     <h2 class="text-center text-uppercase"
-                        style="font-family: Montserrat, 'sans-serif' !important; font-size: 50px !important; color:#667eea; font-weight: 900 !important;">
-                        <span style="font-weight: bold;color:#667eea;">KEY HIGHLIGHTS</span>
+                        style="font-size:clamp(28px, 3vw, 36px); color:#5968C8; font-weight:800; margin:28px 0 10px;">
+                        Key highlights
                     </h2>
-                    <div class="row" style="display: flex; flex-wrap: wrap;">
-                        <div class="col-md-6 col-sm-12 mt32" style="display: flex;">
-                            <div class="container shadow d-flex align-items-center justify-content-center"
-                                 style="border-radius: 5px; padding: 33px 0px; min-height: 180px; margin: 15px auto; width: 100%;">
-                                <div class="col-md-3 d-flex align-items-center justify-content-center"
-                                     style="float:left">
-                                    <div style="font-size: 80px;">🗄️</div>
-                                </div>
-                                <div class="col-md-9" style="padding-left:0; float:left; width:70%">
-                                    <h3 class="mt16 mb0"
-                                        style="font-family:Roboto; font-weight:500; font-size:22px; color: #667eea;">
-                                        Local Storage</h3>
-                                    <p class="mt8 mb-0"
-                                       style="font-family:Roboto ; color: #280135; margin-bottom: 0px;">
-                                        Store backups on local filesystem or network-mounted drives with disk space monitoring
-                                    </p>
+                    <div class="row" style="display:flex; flex-wrap:wrap;">
+                        <div class="col-md-6 col-sm-12 mt-2" style="display:flex;">
+                            <div class="container shadow d-flex align-items-center"
+                                 style="border-radius:12px; padding:22px 16px; min-height:150px; margin:8px auto; width:100%;">
+                                <img class="feature-icon" src="provider_local.png" alt=""
+                                     style="display:block; width:84px; height:84px; max-width:100%; margin-right:14px;">
+                                <div style="flex:1; min-width:0;">
+                                    <h3 style="font-size:22px; font-weight:600; color:#667eea; margin:0 0 8px;">Local Storage</h3>
+                                    <p style="color:#475569; line-height:1.5; margin:0;">Store backups on local filesystems or network-mounted drives, with free-space checks.</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6 col-sm-12 mt32" style="display: flex;">
-                            <div class="container shadow d-flex align-items-center justify-content-center"
-                                 style="border-radius: 5px; padding: 33px 0px; min-height: 180px; margin: 15px auto; width: 100%;">
-                                <div class="col-md-3 d-flex align-items-center justify-content-center"
-                                     style="float:left">
-                                    <div style="font-size: 80px;">🔄</div>
-                                </div>
-                                <div class="col-md-9" style="padding-left:0; float:left; width:70%">
-                                    <h3 class="mt16 mb0"
-                                        style="font-family:Roboto; font-weight:500; font-size:22px; color: #667eea;">
-                                        Automated Backups</h3>
-                                    <p class="mt8 mb-0"
-                                       style="font-family:Roboto ; color: #280135; margin-bottom: 0px;">
-                                        Configurable cron scheduling with multiple backup configurations and formats
-                                    </p>
+                        <div class="col-md-6 col-sm-12 mt-2" style="display:flex;">
+                            <div class="container shadow d-flex align-items-center"
+                                 style="border-radius:12px; padding:22px 16px; min-height:150px; margin:8px auto; width:100%;">
+                                <img class="feature-icon" src="highlight_schedule.png" alt=""
+                                     style="display:block; width:84px; height:84px; max-width:100%; margin-right:14px;">
+                                <div style="flex:1; min-width:0;">
+                                    <h3 style="font-size:22px; font-weight:600; color:#667eea; margin:0 0 8px;">Automated Backups</h3>
+                                    <p style="color:#475569; line-height:1.5; margin:0;">Schedule multiple backup configurations and choose ZIP with or without filestore, or PostgreSQL dump.</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6 col-sm-12 mt32" style="display: flex;">
-                            <div class="container shadow d-flex align-items-center justify-content-center"
-                                 style="border-radius: 5px; padding: 33px 0px; min-height: 180px; margin: 15px auto; width: 100%;">
-                                <div class="col-md-3 d-flex align-items-center justify-content-center"
-                                     style="float:left">
-                                    <div style="font-size: 80px;">🛡️</div>
-                                </div>
-                                <div class="col-md-9" style="padding-left:0; float:left; width:70%">
-                                    <h3 class="mt16 mb0"
-                                        style="font-family:Roboto; font-weight:500; font-size:22px; color: #667eea;">
-                                        Reliability & Verification</h3>
-                                    <p class="mt8 mb-0"
-                                       style="font-family:Roboto ; color: #280135; margin-bottom: 0px;">
-                                        Automatic integrity verification of backup files after creation
-                                    </p>
+                        <div class="col-md-6 col-sm-12 mt-2" style="display:flex;">
+                            <div class="container shadow d-flex align-items-center"
+                                 style="border-radius:12px; padding:22px 16px; min-height:150px; margin:8px auto; width:100%;">
+                                <img class="feature-icon" src="highlight_security.png" alt=""
+                                     style="display:block; width:84px; height:84px; max-width:100%; margin-right:14px;">
+                                <div style="flex:1; min-width:0;">
+                                    <h3 style="font-size:22px; font-weight:600; color:#667eea; margin:0 0 8px;">Reliability &amp; Verification</h3>
+                                    <p style="color:#475569; line-height:1.5; margin:0;">Verify backup integrity after creation and review any failed checks in the job history.</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6 col-sm-12 mt32" style="display: flex;">
-                            <div class="container shadow d-flex align-items-center justify-content-center"
-                                 style="border-radius: 5px; padding: 33px 0px; min-height: 180px; margin: 15px auto; width: 100%;">
-                                <div class="col-md-3 d-flex align-items-center justify-content-center"
-                                     style="float:left">
-                                    <div style="font-size: 80px;">📊</div>
-                                </div>
-                                <div class="col-md-9" style="padding-left:0; float:left; width:70%">
-                                    <h3 class="mt16 mb0"
-                                        style="font-family:Roboto; font-weight:500; font-size:22px; color: #667eea;">
-                                        Monitoring & Reporting</h3>
-                                    <p class="mt8 mb-0"
-                                       style="font-family:Roboto ; color: #280135; margin-bottom: 0px;">
-                                        Real-time job status tracking with success rate statistics and detailed logs
-                                    </p>
+                        <div class="col-md-6 col-sm-12 mt-2" style="display:flex;">
+                            <div class="container shadow d-flex align-items-center"
+                                 style="border-radius:12px; padding:22px 16px; min-height:150px; margin:8px auto; width:100%;">
+                                <img class="feature-icon" src="highlight_monitoring.png" alt=""
+                                     style="display:block; width:84px; height:84px; max-width:100%; margin-right:14px;">
+                                <div style="flex:1; min-width:0;">
+                                    <h3 style="font-size:22px; font-weight:600; color:#667eea; margin:0 0 8px;">Monitoring &amp; Reporting</h3>
+                                    <p style="color:#475569; line-height:1.5; margin:0;">Track job status, success rates, durations, sizes, and detailed logs.</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6 col-sm-12 mt32" style="display: flex;">
-                            <div class="container shadow d-flex align-items-center justify-content-center"
-                                 style="border-radius: 5px; padding: 33px 0px; min-height: 180px; margin: 15px auto; width: 100%;">
-                                <div class="col-md-3 d-flex align-items-center justify-content-center"
-                                     style="float:left">
-                                    <div style="font-size: 80px;">⚙️</div>
-                                </div>
-                                <div class="col-md-9" style="padding-left:0; float:left; width:70%">
-                                    <h3 class="mt16 mb0"
-                                        style="font-family:Roboto; font-weight:500; font-size:22px; color: #667eea;">
-                                        Advanced Management</h3>
-                                    <p class="mt8 mb-0"
-                                       style="font-family:Roboto ; color: #280135; margin-bottom: 0px;">
-                                        Flexible retention policies with automated cleanup and custom filename templates
-                                    </p>
+                        <div class="col-md-6 col-sm-12 mt-2" style="display:flex;">
+                            <div class="container shadow d-flex align-items-center"
+                                 style="border-radius:12px; padding:22px 16px; min-height:150px; margin:8px auto; width:100%;">
+                                <img class="feature-icon" src="highlight_management.png" alt=""
+                                     style="display:block; width:84px; height:84px; max-width:100%; margin-right:14px;">
+                                <div style="flex:1; min-width:0;">
+                                    <h3 style="font-size:22px; font-weight:600; color:#667eea; margin:0 0 8px;">Advanced Management</h3>
+                                    <p style="color:#475569; line-height:1.5; margin:0;">Set count- or time-based retention, automatic cleanup, and custom filenames.</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6 col-sm-12 mt32" style="display: flex;">
-                            <div class="container shadow d-flex align-items-center justify-content-center"
-                                 style="border-radius: 5px; padding: 33px 0px; min-height: 180px; margin: 15px auto; width: 100%;">
-                                <div class="col-md-3 d-flex align-items-center justify-content-center"
-                                     style="float:left">
-                                    <div style="font-size: 80px;">📧</div>
-                                </div>
-                                <div class="col-md-9" style="padding-left:0; float:left; width:70%">
-                                    <h3 class="mt16 mb0"
-                                        style="font-family:Roboto; font-weight:500; font-size:22px; color: #667eea;">
-                                        Email Notifications</h3>
-                                    <p class="mt8 mb-0"
-                                       style="font-family:Roboto ; color: #280135; margin-bottom: 0px;">
-                                        Receive success and failure notifications via email with detailed backup information
-                                    </p>
+                        <div class="col-md-6 col-sm-12 mt-2" style="display:flex;">
+                            <div class="container shadow d-flex align-items-center"
+                                 style="border-radius:12px; padding:22px 16px; min-height:150px; margin:8px auto; width:100%;">
+                                <img class="feature-icon" src="highlight_alerts.png" alt=""
+                                     style="display:block; width:84px; height:84px; max-width:100%; margin-right:14px;">
+                                <div style="flex:1; min-width:0;">
+                                    <h3 style="font-size:22px; font-weight:600; color:#667eea; margin:0 0 8px;">Email Notifications</h3>
+                                    <p style="color:#475569; line-height:1.5; margin:0;">Receive backup success and failure messages with job details by email.</p>
                                 </div>
                             </div>
                         </div>
@@ -374,6 +258,81 @@
                                 </div>
                             </div>
 
+                            <!-- Storage Providers -->
+                            <div class="position-relative mb-4"
+                                 style="border-radius:10px; background-color:#f4f4f4">
+                                <div class="p-md-5 p-3 position-relative">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <h1 style="font-weight:700; font-size:40px; line-height:120%; text-align:center; text-transform:capitalize;">
+                                                <span style="color:#121212;">Supported</span>
+                                                <span style="color:#667eea;">Storage Providers</span>
+                                            </h1>
+                                            <p style="color:#64728f; font-size:16px; text-align:center; margin:10px 0 0;">
+                                                Use either destination or send the same backup to both.
+                                            </p>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="row mt-4">
+                                                <div class="col-md-6 mb-3">
+                                                    <div class="storage-provider-card" style="height:100%; padding:24px; border:1px solid #e2e7f0; border-radius:12px; background:#fff; box-shadow:0 3px 12px rgba(31,41,55,0.06); text-align:center;">
+                                                        <img src="provider_local.png" alt="" width="72" height="72" style="display:block; width:72px; height:72px; margin:0 auto 14px;">
+                                                        <h4 style="margin:0 0 10px; color:#293445; font-size:20px; font-weight:700;">Local Storage</h4>
+                                                        <p style="margin:0 0 10px; color:#475569; font-size:14px; line-height:1.5;">Keep backups on the server or a mounted drive, with free-space checks.</p>
+                                                        <p style="margin:0; color:#5a62c5; font-size:13px; font-weight:600; line-height:1.5;">Best for: quick local copies or NAS storage</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <div class="storage-provider-card" style="height:100%; padding:24px; border:1px solid #e2e7f0; border-radius:12px; background:#fff; box-shadow:0 3px 12px rgba(31,41,55,0.06); text-align:center;">
+                                                        <img src="provider_sftp.png" alt="" width="72" height="72" style="display:block; width:72px; height:72px; margin:0 auto 14px;">
+                                                        <h4 style="margin:0 0 10px; color:#293445; font-size:20px; font-weight:700;">SFTP Storage</h4>
+                                                        <p style="margin:0 0 10px; color:#475569; font-size:14px; line-height:1.5;">Send copies to a remote SSH server with host-key verification.</p>
+                                                        <p style="margin:0; color:#5a62c5; font-size:13px; font-weight:600; line-height:1.5;">Best for: off-site copies and redundancy</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Platform Availability -->
+                            <div class="position-relative mb-4"
+                                 style="border-radius:10px; background-color:#f4f4f4">
+                                <div class="p-md-5 p-3 position-relative">
+                                    <h1 style="font-weight:700; font-size:40px; line-height:120%; text-align:center; text-transform:capitalize;">
+                                        <span style="color:#121212;">Platform</span>
+                                        <span style="color:#667eea;">Availability</span>
+                                    </h1>
+                                    <p style="color:#64728f; font-size:16px; text-align:center; margin:10px 0 24px;">
+                                        Lite backups run on self-hosted Odoo.
+                                    </p>
+                                    <div class="row mt-4">
+                                        <div class="col-md-4 mb-3">
+                                            <div style="height:100%; padding:24px; border:1px solid #e2e7f0; border-top:4px solid #22c55e; border-radius:12px; background:#fff; text-align:center;">
+                                                <h4 style="margin:0 0 10px; color:#293445; font-size:20px; font-weight:700;">On Premise</h4>
+                                                <p style="margin:0 0 10px; color:#16a34a; font-weight:700;">Supported</p>
+                                                <p style="margin:0; color:#475569; font-size:14px; line-height:1.5;">Local and SFTP backups on self-hosted Odoo.</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <div style="height:100%; padding:24px; border:1px solid #e2e7f0; border-top:4px solid #ef4444; border-radius:12px; background:#fff; text-align:center;">
+                                                <h4 style="margin:0 0 10px; color:#293445; font-size:20px; font-weight:700;">Odoo Online</h4>
+                                                <p style="margin:0 0 10px; color:#dc2626; font-weight:700;">Not available</p>
+                                                <p style="margin:0; color:#475569; font-size:14px; line-height:1.5;">Odoo Online does not allow third-party modules.</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <div style="height:100%; padding:24px; border:1px solid #e2e7f0; border-top:4px solid #ef4444; border-radius:12px; background:#fff; text-align:center;">
+                                                <h4 style="margin:0 0 10px; color:#293445; font-size:20px; font-weight:700;">Odoo.sh</h4>
+                                                <p style="margin:0 0 10px; color:#dc2626; font-weight:700;">Not supported</p>
+                                                <p style="margin:0; color:#475569; font-size:14px; line-height:1.5;">Odoo.sh blocks <code>pg_dump</code> for tenant databases. Odoo.sh backups require the Full edition.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Use Cases -->
                             <div class="position-relative mb-4"
                                  style="border-radius:10px; background-color:#f4f4f4">
@@ -427,10 +386,7 @@
                                     <div class="d-flex flex-column align-items-start h-100"
                                          style="padding:30px; border-radius:12px; background-color:#faf8ff">
                                         <div class="d-flex align-items-center justify-content-center">
-                                            <div class="d-flex align-items-center justify-content-center"
-                                                 style="width:36px; height:36px; border-radius:50%; background-color:#667eea; margin-right:10px">
-                                                <i class="fa fa-star" style="color:#fff; font-size:14px"></i>
-                                            </div>
+                                            <img src="provider_local.png" alt="" width="36" height="36" style="display:block; width:36px; height:36px; margin-right:10px;">
                                             <p style="color:#1A202C; font-weight:600; font-size:1.2rem; margin-bottom:2px">
                                                 Local Storage Provider</p>
                                         </div>
@@ -445,10 +401,7 @@
                                     <div class="d-flex flex-column align-items-start h-100"
                                          style="padding:30px; border-radius:12px; background-color:#faf8ff">
                                         <div class="d-flex align-items-center justify-content-center">
-                                            <div class="d-flex align-items-center justify-content-center"
-                                                 style="width:36px; height:36px; border-radius:50%; background-color:#667eea; margin-right:10px">
-                                                <i class="fa fa-star" style="color:#fff; font-size:14px"></i>
-                                            </div>
+                                            <img src="provider_sftp.png" alt="" width="36" height="36" style="display:block; width:36px; height:36px; margin-right:10px;">
                                             <p style="color:#1A202C; font-weight:600; font-size:1.2rem; margin-bottom:2px">
                                                 SFTP Remote Storage</p>
                                         </div>
@@ -463,10 +416,7 @@
                                     <div class="d-flex flex-column align-items-start h-100"
                                          style="padding:30px; border-radius:12px; background-color:#faf8ff">
                                         <div class="d-flex align-items-center justify-content-center">
-                                            <div class="d-flex align-items-center justify-content-center"
-                                                 style="width:36px; height:36px; border-radius:50%; background-color:#667eea; margin-right:10px">
-                                                <i class="fa fa-star" style="color:#fff; font-size:14px"></i>
-                                            </div>
+                                            <img src="highlight_security.png" alt="" width="36" height="36" style="display:block; width:36px; height:36px; margin-right:10px;">
                                             <p style="color:#1A202C; font-weight:600; font-size:1.2rem; margin-bottom:2px">
                                                 Integrity Verification</p>
                                         </div>
@@ -481,10 +431,7 @@
                                     <div class="d-flex flex-column align-items-start h-100"
                                          style="padding:30px; border-radius:12px; background-color:#faf8ff">
                                         <div class="d-flex align-items-center justify-content-center">
-                                            <div class="d-flex align-items-center justify-content-center"
-                                                 style="width:36px; height:36px; border-radius:50%; background-color:#667eea; margin-right:10px">
-                                                <i class="fa fa-star" style="color:#fff; font-size:14px"></i>
-                                            </div>
+                                            <img src="highlight_management.png" alt="" width="36" height="36" style="display:block; width:36px; height:36px; margin-right:10px;">
                                             <p style="color:#1A202C; font-weight:600; font-size:1.2rem; margin-bottom:2px">
                                                 Flexible Retention Policies</p>
                                         </div>
@@ -499,10 +446,7 @@
                                     <div class="d-flex flex-column align-items-start h-100"
                                          style="padding:30px; border-radius:12px; background-color:#faf8ff">
                                         <div class="d-flex align-items-center justify-content-center">
-                                            <div class="d-flex align-items-center justify-content-center"
-                                                 style="width:36px; height:36px; border-radius:50%; background-color:#667eea; margin-right:10px">
-                                                <i class="fa fa-star" style="color:#fff; font-size:14px"></i>
-                                            </div>
+                                            <img src="highlight_monitoring.png" alt="" width="36" height="36" style="display:block; width:36px; height:36px; margin-right:10px;">
                                             <p style="color:#1A202C; font-weight:600; font-size:1.2rem; margin-bottom:2px">
                                                 Real-time Monitoring</p>
                                         </div>
@@ -517,10 +461,7 @@
                                     <div class="d-flex flex-column align-items-start h-100"
                                          style="padding:30px; border-radius:12px; background-color:#faf8ff">
                                         <div class="d-flex align-items-center justify-content-center">
-                                            <div class="d-flex align-items-center justify-content-center"
-                                                 style="width:36px; height:36px; border-radius:50%; background-color:#667eea; margin-right:10px">
-                                                <i class="fa fa-star" style="color:#fff; font-size:14px"></i>
-                                            </div>
+                                            <img src="highlight_alerts.png" alt="" width="36" height="36" style="display:block; width:36px; height:36px; margin-right:10px;">
                                             <p style="color:#1A202C; font-weight:600; font-size:1.2rem; margin-bottom:2px">
                                                 Email Notifications</p>
                                         </div>
@@ -535,63 +476,66 @@
                         </div>
 
                         <!-- Screenshots Tab -->
-                        <div aria-labelledby="screenshots-tab" class="tab-pane fade show" id="screenshots" role="tabpanel">
-                            <div class="row py-4">
+                        <div aria-labelledby="screenshots-tab" class="tab-pane fade" id="screenshots" role="tabpanel">
+                            <div class="row py-4" style="max-width:900px; margin-left:auto; margin-right:auto;">
+                                <div class="col-12 mb-4 text-center">
+                                    <h2 style="color:#5968C8; font-size:32px; font-weight:700; margin-bottom:10px;">See the Lite workflow</h2>
+                                    <p style="color:#64728f; font-size:16px;">Configuration names, provider settings, and job results are examples.</p>
+                                </div>
                                 <div class="col-12 mb-4">
-                                    <h2 style="color: #667eea; font-size: 32px; font-weight: bold; text-align: center; margin-bottom: 10px;">
-                                        Screenshots & User Interface
-                                    </h2>
-                                    <p style="text-align: center; color: #64728f; font-size: 16px;">
-                                        See Database Ultimate Backup Lite in action
-                                    </p>
-                                </div>
-
-                                <!-- Screenshot 1 -->
-                                <div class="col-12 mb-5">
-                                    <div style="background-color: #fff; border-radius: 8px; padding: 20px; border: 1px solid #e3e3e3;">
-                                        <img src="screenshot_1.png" alt="Backup Configurations #1" style="width: 100%; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                                    <div style="padding:16px; border:1px solid #e2e7f0; border-radius:12px; background:#fff; box-sizing:border-box;">
+                                        <h3 style="margin:0 0 6px; color:#293445; font-size:19px; font-weight:700;">Backup configurations</h3>
+                                        <p style="margin:0 0 16px; color:#64728f; font-size:14px; line-height:1.5;">Review configurations and their latest backup status.</p>
+                                        <img src="screenshot_1.png" alt="Backup configurations list"
+                                             style="display:block; width:100%; max-width:100%; height:auto; border:1px solid #e2e7f0; border-radius:6px; box-sizing:border-box;">
                                     </div>
                                 </div>
-
-                                <!-- Screenshot 2 -->
-                                <div class="col-12 mb-5">
-                                    <div style="background-color: #fff; border-radius: 8px; padding: 20px; border: 1px solid #e3e3e3;">
-                                        <img src="screenshot_2.png" alt="Backup Configurations #2" style="width: 100%; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                                <div class="col-12 mb-4">
+                                    <div style="padding:16px; border:1px solid #e2e7f0; border-radius:12px; background:#fff; box-sizing:border-box;">
+                                        <h3 style="margin:0 0 6px; color:#293445; font-size:19px; font-weight:700;">Configure a backup</h3>
+                                        <p style="margin:0 0 16px; color:#64728f; font-size:14px; line-height:1.5;">Choose the format, filestore option, and local or SFTP destinations.</p>
+                                        <img src="screenshot_2.png" alt="Lite ZIP backup configuration with a local provider selected" loading="lazy"
+                                             style="display:block; width:100%; max-width:100%; height:auto; border:1px solid #e2e7f0; border-radius:6px; box-sizing:border-box;">
                                     </div>
                                 </div>
-
-                                <!-- Screenshot 3 -->
-                                <div class="col-12 mb-5">
-                                    <div style="background-color: #fff; border-radius: 8px; padding: 20px; border: 1px solid #e3e3e3;">
-                                        <img src="screenshot_3.png" alt="Backup Jobs" style="width: 100%; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                                <div class="col-12 mb-4">
+                                    <div style="padding:16px; border:1px solid #e2e7f0; border-radius:12px; background:#fff; box-sizing:border-box;">
+                                        <h3 style="margin:0 0 6px; color:#293445; font-size:19px; font-weight:700;">Inspect backup jobs</h3>
+                                        <p style="margin:0 0 16px; color:#64728f; font-size:14px; line-height:1.5;">Review status, duration, size, and verification results.</p>
+                                        <img src="screenshot_3.png" alt="Backup jobs list with illustrative results" loading="lazy"
+                                             style="display:block; width:100%; max-width:100%; height:auto; border:1px solid #e2e7f0; border-radius:6px; box-sizing:border-box;">
                                     </div>
                                 </div>
-
-                                <!-- Screenshot 4 -->
-                                <div class="col-12 mb-5">
-                                    <div style="background-color: #fff; border-radius: 8px; padding: 20px; border: 1px solid #e3e3e3;">
-                                        <img src="screenshot_4.png" alt="Local Storage Providers" style="width: 100%; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                                <div class="col-12 mb-4">
+                                    <div style="padding:16px; border:1px solid #e2e7f0; border-radius:12px; background:#fff; box-sizing:border-box;">
+                                        <h3 style="margin:0 0 6px; color:#293445; font-size:19px; font-weight:700;">Local storage settings</h3>
+                                        <p style="margin:0 0 16px; color:#64728f; font-size:14px; line-height:1.5;">Set a backup directory and monitor free disk space.</p>
+                                        <img src="screenshot_4.png" alt="Lite local storage provider settings" loading="lazy"
+                                             style="display:block; width:100%; max-width:100%; height:auto; border:1px solid #e2e7f0; border-radius:6px; box-sizing:border-box;">
                                     </div>
                                 </div>
-
-                                <!-- Screenshot 5 -->
-                                <div class="col-12 mb-5">
-                                    <div style="background-color: #fff; border-radius: 8px; padding: 20px; border: 1px solid #e3e3e3;">
-                                        <img src="screenshot_5.png" alt="SFTP Storage Providers" style="width: 100%; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                                <div class="col-12 mb-4">
+                                    <div style="padding:16px; border:1px solid #e2e7f0; border-radius:12px; background:#fff; box-sizing:border-box;">
+                                        <h3 style="margin:0 0 6px; color:#293445; font-size:19px; font-weight:700;">SFTP storage settings</h3>
+                                        <p style="margin:0 0 16px; color:#64728f; font-size:14px; line-height:1.5;">Configure a remote SSH destination for off-site copies.</p>
+                                        <img src="screenshot_5.png" alt="Lite SFTP storage provider settings" loading="lazy"
+                                             style="display:block; width:100%; max-width:100%; height:auto; border:1px solid #e2e7f0; border-radius:6px; box-sizing:border-box;">
                                     </div>
                                 </div>
-
-                                <!-- Screenshot 6 -->
-                                <div class="col-12 mb-5">
-                                    <div style="background-color: #fff; border-radius: 8px; padding: 20px; border: 1px solid #e3e3e3;">
-                                        <img src="screenshot_6.png" alt="Backup Scheduler" style="width: 100%; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                                <div class="col-12 mb-4">
+                                    <div style="padding:16px; border:1px solid #e2e7f0; border-radius:12px; background:#fff; box-sizing:border-box;">
+                                        <h3 style="margin:0 0 6px; color:#293445; font-size:19px; font-weight:700;">Backup scheduler</h3>
+                                        <p style="margin:0 0 16px; color:#64728f; font-size:14px; line-height:1.5;">Set the cadence for automatic backups.</p>
+                                        <img src="screenshot_6.png" alt="Lite scheduled backup action" loading="lazy"
+                                             style="display:block; width:100%; max-width:100%; height:auto; border:1px solid #e2e7f0; border-radius:6px; box-sizing:border-box;">
                                     </div>
                                 </div>
-
-                                <!-- Screenshot 7 -->
-                                <div class="col-12 mb-5">
-                                    <div style="background-color: #fff; border-radius: 8px; padding: 20px; border: 1px solid #e3e3e3;">
-                                        <img src="screenshot_7.png" alt="Backup Cleanup" style="width: 100%; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                                <div class="col-12 mb-4">
+                                    <div style="padding:16px; border:1px solid #e2e7f0; border-radius:12px; background:#fff; box-sizing:border-box;">
+                                        <h3 style="margin:0 0 6px; color:#293445; font-size:19px; font-weight:700;">Retention cleanup</h3>
+                                        <p style="margin:0 0 16px; color:#64728f; font-size:14px; line-height:1.5;">Schedule removal of backups past the retention policy.</p>
+                                        <img src="screenshot_7.png" alt="Lite cleanup scheduled action" loading="lazy"
+                                             style="display:block; width:100%; max-width:100%; height:auto; border:1px solid #e2e7f0; border-radius:6px; box-sizing:border-box;">
                                     </div>
                                 </div>
                             </div>
@@ -608,7 +552,7 @@
                                     </h2>
 
                                     <div class="mb-4" style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; border-radius: 4px;">
-                                        <strong>Get started in 4 easy steps! Install <code>asyncssh</code> for SFTP support: <code>pip install asyncssh</code></strong>
+                                        <strong>Get started in 4 easy steps! Install <code>asyncssh</code> for SFTP support: <code>pip install &quot;asyncssh&lt;2.24&quot;</code></strong>
                                     </div>
 
                                     <h3 style="color: #667eea; margin-top: 30px;">1. Configure a Storage Provider</h3>
@@ -637,7 +581,7 @@
                                     </p>
                                     <ul style="color: #64728f;">
                                         <li>Give it a descriptive name (e.g., "Daily Production Backup")</li>
-                                        <li>Select your backup format (ZIP recommended for full backups)</li>
+                                        <li>Select ZIP or PostgreSQL dump; ZIP backups can include or omit the filestore</li>
                                         <li>Choose your local and/or SFTP storage providers</li>
                                         <li>Configure retention policy (e.g., keep last 7 backups)</li>
                                         <li>Enable email notifications if desired</li>
@@ -690,11 +634,32 @@
                              class="tab-pane fade show" id="releases"
                              role="tabpanel">
 
-                            <!-- Version 19.0.1.4.2 -->
+                            <!-- Version 19.0.1.5.0 -->
                             <div class="row pt-5 m-0">
                                 <div class="col-md-3">
+                                    <h4 style="font-size:16px; font-weight:600; color:#514F4F; margin:0; line-height:26px;">Latest Release 19.0.1.5.0</h4>
+                                    <span style="font-size:14px; color:#7A7979; display:block; margin-bottom:20px;">October 4, 2026</span>
+                                </div>
+                                <div class="col-md-8">
+                                    <div style="padding:0 0 40px; color:#7A7979;">
+                                        <ul class="pl-3 mb-0">
+                                            <li>Choose ZIP backups with or without the filestore; each job records the selected option.</li>
+                                            <li>Failed PostgreSQL dumps, empty backup files, and corrupt ZIP members are rejected before upload.</li>
+                                            <li>Storage operations and SFTP passwords are restricted to Backup Administrators.</li>
+                                            <li>Clearer job statuses, corrected failure filters, and warnings when only some destinations succeed.</li>
+                                            <li>Refreshed icon, banner, store layout, and Odoo 19 screenshots.</li>
+                                            <li>Full-edition preview menus removed; edition details remain in contextual notes and the store comparison.</li>
+                                        </ul>
+                                    </div>
+                                    <div style="border-bottom:1px solid #E3E3E3"></div>
+                                </div>
+                            </div>
+
+                            <!-- Version 19.0.1.4.2 -->
+                            <div class="row pt-3 m-0">
+                                <div class="col-md-3">
                                     <h4 style="font-size:16px; font-weight:600; color:#514F4F; margin:0; line-height:26px;">
-                                        Latest Release 19.0.1.4.2
+                                        Version 19.0.1.4.2
                                     </h4>
                                     <span style="font-size:14px; color:#7A7979; display:block; margin-bottom:20px;">
                                         June 26, 2026
@@ -915,22 +880,23 @@
                     </div>
                 </div>
 
-                <!-- Upgrade CTA Section -->
+                <!-- Edition comparison -->
                 <div class="my-5">
-                    <div style="background-color: #f8f9fa; border: 2px solid #667eea; padding: 40px; border-radius: 8px; text-align: center;">
-                        <h2 style="margin: 0 0 15px 0; color: #667eea; font-size: 32px; font-weight: 700;">
-                            Need Multi-Cloud Storage?
+                    <div style="background-color: #f8f9fa; padding: 40px; border-radius: 8px; text-align: center;">
+                        <h2 style="margin: 0 0 15px 0; color: #667eea; font-size: 28px; font-weight: 700;">
+                            Lite and Full editions
                         </h2>
                         <p style="font-size: 1.1em; margin: 10px 0 25px; color: #64728f;">
-                            This <strong>Lite</strong> edition is free and fully functional for local &amp; SFTP backups.
-                            Upgrade to <a href="https://apps.odoo.com/apps/modules/19.0/database_ultimate_backup" target="_blank" style="color: #667eea; font-weight: 700; text-decoration: underline;"><strong>Database Ultimate Backup</strong></a> (Full Edition) when you need multi-cloud storage, a real-time dashboard and team alerts.
+                            Lite includes local and SFTP backups. The Full edition adds cloud destinations, a dashboard and team alerts.
+                            Check version compatibility before choosing an edition.
                         </p>
-                        <table style="width: 100%; max-width: 720px; margin: 0 auto; border-collapse: collapse; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e3e3e3;">
+                        <div class="table-responsive" style="overflow-x:auto;">
+                        <table style="width: 100%; min-width: 560px; max-width: 720px; margin: 0 auto; border-collapse: collapse; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e3e3e3;">
                             <thead>
                                 <tr style="background-color: #f1f3f9;">
                                     <th style="text-align: left; padding: 14px 16px; color: #333; font-size: 15px;">Feature</th>
                                     <th style="text-align: center; padding: 14px 16px; color: #555; font-size: 15px; width: 110px;">Lite<br><span style="font-weight: 400; font-size: 12px; color: #28a745;">Free</span></th>
-                                    <th style="text-align: center; padding: 14px 16px; color: #ffffff; background-color: #667eea; font-size: 15px; width: 110px;">Pro<br><span style="font-weight: 400; font-size: 12px; color: #e6e9ff;">Full Edition</span></th>
+                                    <th style="text-align: center; padding: 14px 16px; color: #ffffff; background-color: #667eea; font-size: 15px; width: 110px;">Full Edition</th>
                                 </tr>
                             </thead>
                             <tbody style="color: #4a4a4a; font-size: 14px;">
@@ -1001,26 +967,24 @@
                                 </tr>
                             </tbody>
                         </table>
+                        </div>
                         <div style="margin-top: 28px;">
-                            <a href="https://apps.odoo.com/apps/modules/19.0/database_ultimate_backup" target="_blank" style="display: inline-block; background-color: #667eea; color: #ffffff; padding: 14px 32px; border-radius: 6px; font-weight: 700; font-size: 16px; text-decoration: none;">
-                                Upgrade to Pro &#8594;
+                            <a href="https://apps.odoo.com/apps/modules/19.0/database_ultimate_backup" target="_blank" rel="noopener noreferrer"
+                               style="display: inline-block; background-color: #667eea; color: #ffffff; padding: 14px 32px; border-radius: 6px; font-weight: 700; font-size: 16px; text-decoration: none;">
+                                View Full Edition &#8594;
                             </a>
                         </div>
                     </div>
                 </div>
 
                 <!-- CTA Section -->
-                <div class="my-5">
-                    <div style="background-color: #667eea; color: white; padding: 40px; border-radius: 8px; text-align: center;">
-                        <h2 style="margin: 0 0 15px 0; color: white; font-size: 32px; font-weight: 700;">
-                            Ready to Secure Your Data?
+                <div class="my-4">
+                    <div style="background-color: #0A1425; color: white; padding: 34px; border-radius: 12px; text-align: center;">
+                        <h2 style="margin: 0 0 12px; color: white; font-family: Montserrat, Arial, sans-serif; font-size: 30px; font-weight: 700;">
+                            Put your backup plan in place
                         </h2>
-                        <p style="font-size: 1.1em; margin: 10px 0;">
-                            Install <strong>Database Ultimate Backup Lite</strong> today - it's free!
-                            Enjoy automated, verified, and reliable local &amp; SFTP database backups.
-                        </p>
-                        <p style="margin-top: 20px; font-size: 1.2em;">
-                            Don't forget to rate this module if you find it useful!
+                        <p style="max-width: 720px; margin: 0 auto; color: #E0E6FA; font-size: 16px; line-height: 1.6;">
+                            Start with a verified local backup, add SFTP for off-site copies, and monitor every run from Odoo.
                         </p>
                     </div>
                 </div>
@@ -1031,7 +995,7 @@
 
 <div class="footer" style="text-align: center; padding: 40px 20px; color: #777; font-size: 0.9em; background-color: #f9f9f9; margin-top: 40px;">
     <p style="margin: 5px 0;"><strong>Database Ultimate Backup Lite for Odoo 19.0</strong></p>
-    <p style="margin: 5px 0;">Version 1.4.2 | Licensed under MIT | Free</p>
+    <p style="margin: 5px 0;">Version 1.5.0 | Licensed under MIT | Free</p>
     <p style="margin: 5px 0;">Developed by René Hechavarría</p>
     <p style="margin-top: 15px; font-style: italic;">
         Free local &amp; SFTP backup solution with automated scheduling,
