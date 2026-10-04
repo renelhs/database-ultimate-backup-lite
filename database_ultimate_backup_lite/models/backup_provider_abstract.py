@@ -4,6 +4,7 @@ import logging
 
 from abc import abstractmethod
 from odoo import api, models, fields
+from .backup_utils import require_backup_admin
 
 _logger = logging.getLogger(__name__)
 
@@ -57,6 +58,7 @@ class BackupProviderAbstract(models.AbstractModel):
             record.display_name = name
     
     # Abstract methods that must be implemented by concrete providers
+    @api.private
     @abstractmethod
     def test_connection(self):
         """
@@ -74,7 +76,7 @@ class BackupProviderAbstract(models.AbstractModel):
         This method calls test_connection() and displays appropriate notifications.
         """
         self.ensure_one()
-        self.check_access('write')
+        require_backup_admin(self)
         try:
             result = self.test_connection()
             
@@ -122,6 +124,7 @@ class BackupProviderAbstract(models.AbstractModel):
                 }
             }
     
+    @api.private
     @abstractmethod
     def upload_backup(self, backup_file_path, remote_filename):
         """
@@ -136,6 +139,7 @@ class BackupProviderAbstract(models.AbstractModel):
         """
         pass
     
+    @api.private
     @abstractmethod
     def download_backup(self, remote_filename, local_path):
         """
@@ -150,6 +154,7 @@ class BackupProviderAbstract(models.AbstractModel):
         """
         pass
     
+    @api.private
     @abstractmethod
     def list_backups(self, prefix=None):
         """
@@ -163,8 +168,9 @@ class BackupProviderAbstract(models.AbstractModel):
         """
         pass
     
+    @api.private
     @abstractmethod
-    def delete_backup(self, remote_filename):
+    def delete_backup(self, remote_filename, backup_info=None):
         """
         Delete a backup file from the storage provider.
         
@@ -176,6 +182,7 @@ class BackupProviderAbstract(models.AbstractModel):
         """
         pass
     
+    @api.private
     @abstractmethod
     def get_storage_info(self):
         """

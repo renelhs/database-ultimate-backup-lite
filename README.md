@@ -12,8 +12,8 @@ A free, reliable database backup solution for Odoo 20.0 with **local and SFTP re
 - **Local Storage**: Store backups on local filesystem or network-mounted drives
 - **SFTP Remote Storage**: Securely transfer backups to remote servers via SSH/SFTP
 - **Backup Formats**: ZIP archives with or without filestore, or PostgreSQL dumps
-- **Integrity Verification**: Automatic verification of backup files after creation
-- **Flexible Scheduling**: Automated backups via cron jobs with configurable intervals
+- **Integrity Verification**: ZIP CRC checks, nonempty SQL validation, complete PostgreSQL archive parsing, and a recorded SHA-256 checksum
+- **Flexible Scheduling**: Manual and scheduled requests are queued for a dedicated backup worker
 
 ### Advanced Management
 - **Retention Policies**: Keep last N backups or retain for N days
@@ -40,6 +40,10 @@ A free, reliable database backup solution for Odoo 20.0 with **local and SFTP re
 - Two-tier access control (User and Administrator)
 - Granular model-level permissions
 - System user for automated operations
+- Administrator-only access to SFTP passwords and transfer operations
+- Local paths confined to the configured storage directory; verified uploads are published atomically with private file permissions
+
+Credentials are protected by Odoo access permissions; the module does not encrypt them in the database. ZIP/dump validation and checksums detect archive problems but do not replace a restore test. SFTP upload verification compares file sizes.
 
 ## Installation
 
@@ -124,19 +128,22 @@ Click **Save**.
 ### Step 3: Test Your Configuration
 
 1. Click the **Test Providers** button to verify all providers are accessible
-2. Click the **Create Backup Now** button to perform a manual test backup
-3. Go to **Backup Jobs** to monitor the backup progress and results
+2. Click **Create Backup Now** to queue a manual test backup
+3. Open **Backup Jobs** and refresh to see the completed result, logs and SHA-256 checksum
 4. Verify the backup file exists in your storage location
+
+The **Database Ultimate Backup Lite Job Queue** scheduled action is enabled on installation and processes pending jobs every minute. Odoo cron workers must be running. Uploads remain sequential. Repeated requests for the same configuration are rejected while a job is pending or running; **Retry Backup** creates a new job and preserves the previous attempt.
 
 ### Step 4: Enable Automated Backups
 
-The module includes a scheduled action (cron job) that runs daily by default.
+The scheduler has a daily interval and is disabled initially. Activate it when your configuration is ready.
 
 To customize the schedule:
 1. Go to **Settings > Technical > Automation > Scheduled Actions**
 2. Search for "Database Ultimate Backup Lite Scheduler"
 3. Edit the **Execute Every** field to your preferred interval
 4. Set the **Next Execution Date** if needed
+5. Enable the scheduled action
 
 **Active backup configurations** will automatically run according to the cron schedule.
 
@@ -157,16 +164,21 @@ Odoo 20's database manager accepts ZIP backups. Restore a `.dump` file into an e
 | Policy | Description | Example |
 |--------|-------------|---------|
 | **Keep Last N Backups** | Maintains the most recent N backups | Keep last 7 backups = 1 week of daily backups |
-| **Keep for N Days** | Retains backups newer than N days | Keep 30 days = monthly retention |
+| **Keep for N Days** | Retains recent backups and always preserves the newest known copy | Keep 30 days, plus the latest copy if all are older |
+| **Keep All Backups** | Disables automatic deletion for this configuration | Archive without automatic retention |
+
+Retention only deletes successful uploads recorded for the current configuration and destination. Untracked files, unknown dates and ambiguous legacy locations are preserved. Keep the job history: deleting it also removes the evidence used to identify owned copies. Cleanup runs after successful or partially successful backups and through the cleanup scheduled action.
 
 ### Backup Name Template
 
 Customize backup filenames using variables:
 - `{database}` - Database name
-- `{timestamp}` - Timestamp in YYYYMMDD_HHMMSS format
-- `{format}` - File extension (zip or sql)
+- `{timestamp}` - Timestamp including microseconds
+- `{format}` - File extension (`zip` or `dump`)
 
 **Default**: `{database}_{timestamp}.{format}`
+
+A unique suffix is always appended to prevent a repeated filename template from overwriting an earlier run. Partial uploads remain **Warning** and use the failure email preference, even when success emails are disabled.
 
 ## Troubleshooting
 

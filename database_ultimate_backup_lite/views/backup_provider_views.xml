@@ -171,7 +171,7 @@
                                     <field name="transfer_timeout" widget="integer"/>
                                 </group>
                                 <group string="Performance">
-                                    <field name="max_concurrent_transfers"/>
+                                    <field invisible="1" name="max_concurrent_transfers"/>
                                     <field name="preserve_file_permissions"/>
                                 </group>
                             </group>
