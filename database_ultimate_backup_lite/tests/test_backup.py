@@ -9,7 +9,7 @@ import zipfile
 
 import odoo.tools
 from odoo import Command
-from odoo.exceptions import AccessDenied, AccessError, UserError
+from odoo.exceptions import AccessError, UserError
 from odoo.tests.common import TransactionCase, tagged
 
 from ..models import backup_job as job_module
@@ -54,7 +54,7 @@ class TestBackup(TransactionCase):
         })
         self.job = self.env['backup.job'].create({
             'config_id': self.config.id, 'database_name': self.env.cr.dbname,
-            'backup_format': 'zip',
+            'backup_format': 'zip', 'status': 'error',
         })
         self.patch(type(self.job), '_cleanup_stale_temp_files', lambda *a, **kw: None)
 
@@ -127,7 +127,7 @@ class TestBackup(TransactionCase):
         name_size, extra_size = struct.unpack_from('<HH', data, 26)
         data[30 + name_size + extra_size] ^= 1
         path.write_bytes(data)
-        with self.assertRaisesRegex(UserError, 'corrupt file: dump.sql'):
+        with self.assertRaisesRegex(UserError, 'integrity check failed for: dump.sql'):
             self.job._verify_backup_integrity(str(path))
         self.assertEqual(self.job.verification_status, 'failed')
 
@@ -229,7 +229,7 @@ class TestBackup(TransactionCase):
     def test_dump_authorization_does_not_trust_execution_flags(self):
         self.job.is_manual = False
         with patch.object(type(self.job), '_dump_db') as dump:
-            with self.assertRaises(AccessDenied):
+            with self.assertRaises(AccessError):
                 self.job.with_user(self.reader).with_context(manual_execution=False)._create_database_dump(io.BytesIO())
         dump.assert_not_called()
 
@@ -258,11 +258,12 @@ class TestBackup(TransactionCase):
              patch.object(type(self.sftp), 'upload_backup', return_value={'success': False, 'message': 'offline'}), \
              patch.object(type(self.config), '_send_notification') as notify:
             action = self.config.create_backup()
-        job = self.config.backup_job_ids.sorted('id')[-1]
+            with patch.object(type(self.env['ir.cron']), '_commit_progress', return_value=0):
+                self.env['backup.job'].run_pending_backups()
+        job = self.env['backup.job'].browse(action['res_id'])
         self.assertEqual(job.status, 'warning')
         self.assertEqual(self.config.last_backup_status, 'warning')
-        self.assertEqual(action['params']['type'], 'warning')
-        self.assertTrue(action['params']['sticky'])
+        self.assertEqual(action['type'], 'ir.actions.act_window')
         notify.assert_called_once_with(job, 'warning')
 
     def test_scheduler_passes_filestore_selection(self):
@@ -276,6 +277,12 @@ class TestBackup(TransactionCase):
         with patch.object(type(self.job), '_process_backup', process), \
              patch.object(type(self.config), 'cleanup_old_backups') as cleanup:
             self.env['backup.config'].with_user(cron.user_id).run_scheduled_backups()
+            queued = self.config.backup_job_ids.filtered(lambda job: job.status == 'pending')
+            self.assertEqual(len(queued), 1)
+            self.assertFalse(queued.include_filestore)
+            cleanup.assert_not_called()
+            with patch.object(type(self.env['ir.cron']), '_commit_progress', return_value=0):
+                self.env['backup.job'].run_pending_backups()
         created = self.config.backup_job_ids.sorted('id')[-1]
         self.assertFalse(created.is_manual)
         self.assertFalse(created.include_filestore)

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import os
+import hashlib
+import uuid
 import datetime
 import glob
 import re
@@ -16,7 +18,8 @@ import odoo.release
 from odoo.service.db import exp_db_exist
 import odoo.sql_db
 from odoo import models, fields, api, tools
-from odoo.exceptions import UserError, AccessDenied
+from odoo.exceptions import UserError
+from .backup_utils import require_backup_admin, validate_filename
 from odoo.tools.misc import exec_pg_environ, find_pg_tool
 
 _logger = logging.getLogger(__name__)
@@ -126,6 +129,8 @@ class BackupJob(models.Model):
         help='JSON-encoded results from storage providers'
     )
     
+    backup_sha256 = fields.Char(string='Archive SHA-256', readonly=True)
+
     # Verification
     verification_status = fields.Selection([
         ('not_verified', 'Not Verified'),
@@ -226,6 +231,8 @@ class BackupJob(models.Model):
         # an earlier failure gets a chance to free space.
         self._cleanup_stale_temp_files()
 
+        require_backup_admin(self)
+        self.write({'status': 'running', 'start_time': fields.Datetime.now()})
         self._log("Starting backup process")
 
         # A PostgreSQL custom dump never contains a filestore, including when
@@ -260,6 +267,13 @@ class BackupJob(models.Model):
             # Verify backup integrity if enabled
             if self.config_id.verify_backups:
                 self._verify_backup_integrity(backup_file_path)
+
+            # Odoo 19 supports Python 3.10, before hashlib.file_digest existed.
+            digest = hashlib.sha256()
+            with open(backup_file_path, 'rb') as source:
+                for chunk in iter(lambda: source.read(1024 * 1024), b''):
+                    digest.update(chunk)
+            self.backup_sha256 = digest.hexdigest()
 
             # Upload to storage providers
             provider_results = self._upload_to_providers(backup_file_path)
@@ -317,7 +331,7 @@ class BackupJob(models.Model):
         template = self.config_id.backup_name_template or '{database}_{timestamp}.{format}'
         
         # Prepare template variables
-        timestamp = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+        timestamp = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S_%f')
         variables = {
             'database': self.database_name,
             'timestamp': timestamp,
@@ -330,8 +344,9 @@ class BackupJob(models.Model):
         
         # Sanitize filename
         filename = self._sanitize_filename(filename)
-        
-        return filename
+        stem, extension = os.path.splitext(filename)
+        filename = f'{stem}_{uuid.uuid4().hex[:12]}{extension}'
+        return validate_filename(filename)
     
     def _sanitize_filename(self, filename):
         """Sanitize filename to be safe for all filesystems."""
@@ -353,7 +368,8 @@ class BackupJob(models.Model):
 
         backup_file_path = os.path.join(temp_dir, self.backup_filename)
         try:
-            with open(backup_file_path, 'wb') as backup_file:
+            descriptor = os.open(backup_file_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(descriptor, 'wb') as backup_file:
                 self._create_database_dump(backup_file)
 
             self._log(f"Backup file created successfully: {backup_file_path}")
@@ -413,20 +429,7 @@ class BackupJob(models.Model):
         when web database management is disabled via ``list_db = False``.
         Authorization is therefore enforced against backup-admin membership.
         """
-        # Authorization check: a database dump is a full export of the data and
-        # must be restricted to the backup system (cron) or a backup
-        # administrator. We verify group membership explicitly here instead of
-        # trusting ``is_manual``, which is a caller-controlled context flag
-        # (defaults to True) and provides no real authorization. ``is_manual``
-        # is kept purely as audit metadata on the job.
-        # Backup Administrators need not have access to technical cron settings.
-        # Elevate only this lookup; the dump still checks the original user.
-        cron_user = self.env.ref('database_ultimate_backup_lite.backup_cron').sudo().user_id
-        is_cron_user = self.env.user.id == cron_user.id
-        is_backup_admin = self.env.user.has_group('database_ultimate_backup_lite.group_backup_admin')
-
-        if not is_cron_user and not is_backup_admin:
-            raise AccessDenied("Database dumps require backup administrator rights")
+        require_backup_admin(self)
 
         # Odoo.sh guard: the platform revokes the tenant role's read access to
         # pg_settings (CVE-2024-7348 hardening), so pg_dump aborts and would
@@ -658,16 +661,19 @@ class BackupJob(models.Model):
         """Verify ZIP backup integrity."""
         try:
             with zipfile.ZipFile(backup_file_path, 'r') as zip_file:
-                # testzip returns the first corrupt member instead of raising.
-                corrupt_member = zip_file.testzip()
-                if corrupt_member:
-                    raise UserError(f"ZIP backup contains a corrupt file: {corrupt_member}")
+                # Test ZIP file integrity
+                damaged = zip_file.testzip()
+                if damaged is not None:
+                    raise UserError('ZIP integrity check failed for: %s' % damaged)
                 
                 # Check required files
                 file_list = zip_file.namelist()
                 if 'dump.sql' not in file_list:
                     raise UserError("ZIP backup missing dump.sql file")
                 
+                if zip_file.getinfo('dump.sql').file_size == 0:
+                    raise UserError('ZIP backup contains an empty SQL dump')
+
                 if 'manifest.json' not in file_list:
                     raise UserError("ZIP backup missing manifest.json file")
                 
@@ -680,16 +686,14 @@ class BackupJob(models.Model):
             raise UserError("Backup file is not a valid ZIP archive")
     
     def _verify_dump_backup(self, backup_file_path):
-        """Verify PostgreSQL dump backup integrity."""
-        # For dump files, we can try to parse the header
-        try:
-            with open(backup_file_path, 'rb') as f:
-                header = f.read(5)
-                # PostgreSQL custom format dumps start with 'PGDMP'
-                if header != b'PGDMP':
-                    raise UserError("File is not a valid PostgreSQL dump")
-        except Exception as e:
-            raise UserError(f"Failed to verify dump file: {e}")
+        """Parse the entire archive without connecting to or restoring any database."""
+        result = subprocess.run(
+            [find_pg_tool('pg_restore'), '--no-owner', '--file=' + os.devnull, backup_file_path],
+            env=exec_pg_environ(), stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+        )
+        if result.returncode:
+            raise UserError("PostgreSQL archive validation failed: %s" %
+                            result.stderr.decode(errors='replace')[:500])
     
     def _upload_to_providers(self, backup_file_path):
         """Upload backup to all configured storage providers."""
@@ -705,7 +709,7 @@ class BackupJob(models.Model):
             
             try:
                 result = provider.upload_backup(backup_file_path, self.backup_filename)
-                results[provider.name] = result
+                results[f'{provider._name}:{provider.id}'] = result
                 
                 if result.get('success'):
                     self._log(f"Upload to {provider.name} successful")
@@ -714,7 +718,7 @@ class BackupJob(models.Model):
             except Exception as e:
                 error_msg = f"Upload to {provider.name} failed with exception: {e}"
                 self._log(error_msg)
-                results[provider.name] = {
+                results[f'{provider._name}:{provider.id}'] = {
                     'success': False,
                     'message': str(e),
                     'metadata': {}
@@ -867,25 +871,12 @@ class BackupJob(models.Model):
             )
 
     def retry_backup(self):
-        """Retry a failed backup job."""
+        require_backup_admin(self)
         self.ensure_one()
-        
-        if self.status not in ['error', 'warning']:
+        if self.status not in ('error', 'warning'):
             raise UserError("Can only retry failed or warning backups")
-        
-        # Reset job status
-        self.write({
-            'status': 'pending',
-            'end_time': False,
-            'error_message': False,
-            'log_entries': False,
-            'provider_results': False,
-            'verification_status': 'not_verified',
-            'verification_details': False,
-        })
-        
-        # Process the backup
-        return self._process_backup()
+        # Keep the failed run and its evidence instead of rewriting its history.
+        return self.config_id.create_backup()
     
     def view_provider_results(self):
         """View detailed provider results."""
@@ -911,3 +902,39 @@ class BackupJob(models.Model):
                 'default_provider_results': formatted_results,
             },
         }
+
+
+    @api.model
+    @api.private
+    def run_pending_backups(self):
+        """Process committed queue entries in bounded cron batches.
+
+        A row lock prevents duplicate execution. If a worker dies before commit,
+        the durable pending entry remains available for the next cron attempt.
+        """
+        require_backup_admin(self)
+        for _index in range(10):
+            self.flush_model()
+            self.env.cr.execute("""
+                SELECT id FROM backup_job WHERE status = 'pending'
+                ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1
+            """)
+            row = self.env.cr.fetchone()
+            if not row:
+                break
+            job = self.browse(row[0])
+            if not job.config_id.active or not job.config_id.all_providers:
+                result = {'success': False, 'message': 'Configuration or destinations are inactive.', 'backup_job': job}
+                job.write({'status': 'error', 'error_message': result['message'], 'end_time': fields.Datetime.now()})
+            else:
+                try:
+                    with self.env.cr.savepoint():
+                        result = job._process_backup()
+                except Exception as error:
+                    _logger.exception('Backup job %s failed', job.id)
+                    job.write({'status': 'error', 'error_message': str(error), 'end_time': fields.Datetime.now()})
+                    result = {'success': False, 'message': str(error), 'backup_job': job}
+            job.config_id._finish_backup(job, result)
+            remaining = self.search_count([('status', '=', 'pending')])
+            if not self.env['ir.cron']._commit_progress(1, remaining=remaining):
+                break

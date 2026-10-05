@@ -16,8 +16,8 @@
         * **Local Storage**: Store backups on local filesystem or network-mounted drives
         * **SFTP Remote Storage**: Securely transfer backups to remote servers via SSH/SFTP
         * **Backup Formats**: ZIP archives with or without filestore, or PostgreSQL custom dumps
-        * **Integrity Verification**: Automatic verification after backup creation
-        * **Flexible Scheduling**: Automated backups via configurable cron jobs
+        * **Integrity Verification**: ZIP CRC checks, full PostgreSQL archive parsing, and recorded SHA-256 checksums
+        * **Flexible Scheduling**: Queued manual and scheduled backups via configurable cron jobs
         * **Retention Policies**: Keep last N backups or retain for N days
         * **Automated Cleanup**: Automatic removal of old backups based on policy
         * **Job Monitoring**: Track backup history, status, duration, and file sizes
@@ -37,7 +37,7 @@
         * Two-tier access control: User and Administrator roles. Creating a
           database dump requires the Backup Administrator group (or the backup
           cron user); read-only Backup Users cannot trigger dumps.
-        * Secure credential storage
+        * Administrator-only access to SFTP credentials
         * Granular model-level permissions
 
         Security Note: list_db and database dumps
@@ -59,7 +59,7 @@
     'maintainer': "René Hechavarría",
 
     'category': 'Administration',
-    'version': '19.0.1.5.0',
+    'version': '19.0.1.6.0',
 
     # Module dependencies
     'depends': ['base'],

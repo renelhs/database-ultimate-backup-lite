@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import json
 import logging
 import re
 
 from odoo import models, fields, api
 from odoo.exceptions import UserError, ValidationError
+from .backup_utils import require_backup_admin, confined_path, utc_datetime
 
 _logger = logging.getLogger(__name__)
 
@@ -74,7 +76,7 @@ class BackupConfig(models.Model):
     retention_policy = fields.Selection([
         ('count', 'Keep Last N Backups'),
         ('days', 'Keep Backups for N Days'),
-        ('custom', 'Custom Retention Policy'),
+        ('custom', 'Keep All Backups (No Automatic Deletion)'),
     ], string='Retention Policy', required=True, default='count')
     retention_count = fields.Integer(
         string='Number of Backups to Keep',
@@ -151,7 +153,7 @@ class BackupConfig(models.Model):
     @property
     def all_providers(self):
         """Get all configured providers."""
-        return list(self.local_provider_ids) + list(self.sftp_provider_ids)
+        return list(self.local_provider_ids.filtered('active')) + list(self.sftp_provider_ids.filtered('active'))
 
     def _get_current_database(self):
         """Get current database name."""
@@ -169,117 +171,47 @@ class BackupConfig(models.Model):
                 record.backup_success_rate = 0.0
     
     def create_backup(self):
-        """
-        Create a backup using this configuration.
-        
-        This method creates a new backup job and processes it.
-        """
+        """Queue a durable job for the dedicated backup worker."""
+        require_backup_admin(self)
         self.ensure_one()
-        self.check_access('write')
-        
-        if not self.active:
-            raise UserError("Cannot create backup: configuration is inactive")
-        
-        if not self.all_providers:
-            raise UserError("Cannot create backup: no storage providers configured")
-        
-        # Create backup job
-        is_manual = self.env.context.get('manual_execution', True)
-        backup_job = self.env['backup.job'].create({
+        if not self.active or not self.all_providers:
+            raise UserError("An active configuration with active storage providers is required.")
+        # Force a write conflict under Odoo's repeatable-read isolation. A request
+        # with an older snapshot must retry before checking for pending jobs.
+        # No field value changes; a row lock alone still allows duplicate inserts.
+        self.env.cr.execute('UPDATE backup_config SET write_date = write_date WHERE id = %s', [self.id])
+        Job = self.env['backup.job']
+        if Job.search_count([('config_id', '=', self.id), ('status', 'in', ['pending', 'running'])]):
+            raise UserError("This configuration already has a queued or running backup.")
+        job = Job.create({
             'config_id': self.id,
             'database_name': self.database_name,
             'backup_format': self.backup_format,
             'include_filestore': self.backup_format == 'zip' and self.include_filestore,
-            'status': 'running',
-            'start_time': fields.Datetime.now(),
-            'is_manual': is_manual,  # Flag to indicate execution type
+            'status': 'pending',
+            'is_manual': self.env.context.get('manual_execution', True),
         })
-        
-        try:
-            # Process the backup job
-            result = backup_job._process_backup()
-            
-            # Update configuration statistics
-            self._update_backup_statistics(result)
-            
-            # Send notifications if needed
-            if backup_job.status == 'warning' and self.notify_failure:
-                self._send_notification(backup_job, 'warning')
-            elif backup_job.status == 'success' and self.notify_success:
-                self._send_notification(backup_job, 'success')
-            elif not result.get('success') and self.notify_failure:
-                self._send_notification(backup_job, 'failure')
-            
-            # Return appropriate response based on context
-            # For UI calls, return notifications. For programmatic calls (cron), return the backup_job
-            if self.env.context.get('manual_execution', True):
-                # Show user notification based on result
-                if result.get('success'):
-                    has_warnings = backup_job.status == 'warning'
-                    return {
-                        'type': 'ir.actions.client',
-                        'tag': 'display_notification',
-                        'params': {
-                            'title': 'Backup Completed with Warnings' if has_warnings else 'Backup Successful',
-                            'message': result.get('message') if has_warnings else f"Backup '{backup_job.backup_filename}' created successfully.",
-                            'type': 'warning' if has_warnings else 'success',
-                            'sticky': has_warnings,
-                        }
-                    }
-                else:
-                    return {
-                        'type': 'ir.actions.client',
-                        'tag': 'display_notification',
-                        'params': {
-                            'title': 'Backup Failed',
-                            'message': result.get('message', 'Unknown error occurred during backup.'),
-                            'type': 'danger',
-                            'sticky': True,
-                        }
-                    }
-            else:
-                # For programmatic execution (cron), return the backup_job
-                return backup_job
-        except Exception as e:
-            _logger.error("Backup creation failed: %s", str(e))
-            backup_job.write({
-                'status': 'error',
-                'end_time': fields.Datetime.now(),
-                'error_message': str(e),
-            })
-            
-            # Update configuration
-            self.write({
-                'last_backup_date': fields.Datetime.now(),
-                'last_backup_status': 'error',
-                'last_backup_message': str(e),
-            })
-            
-            # Send failure notification
-            if self.notify_failure:
-                self._send_notification(backup_job, 'failure')
-            
-            # Return appropriate response based on context
-            if self.env.context.get('manual_execution', True):
-                # Show error notification to user instead of raising
-                return {
-                    'type': 'ir.actions.client',
-                    'tag': 'display_notification',
-                    'params': {
-                        'title': 'Backup Error',
-                        'message': f"Backup failed: {str(e)}",
-                        'type': 'danger',
-                        'sticky': True,
-                    }
-                }
-            else:
-                # For programmatic execution, return the backup_job
-                return backup_job
+        # This fixed cron is an implementation detail; backup administrators do
+        # not need access to Odoo's technical Scheduled Actions settings.
+        runner = self.env.ref('database_ultimate_backup_lite.backup_job_cron').sudo()
+        if not runner.active:
+            raise UserError("Enable the Database Ultimate Backup Lite Job Queue scheduled action first.")
+        runner._trigger()
+        if not self.env.context.get('manual_execution', True):
+            return job
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Queued Backup',
+            'res_model': 'backup.job',
+            'res_id': job.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
     
     def test_providers(self):
         """Test all configured providers."""
+        require_backup_admin(self)
         self.ensure_one()
-        self.check_access('write')
         
         if not self.all_providers:
             raise UserError("No storage providers configured")
@@ -344,15 +276,15 @@ class BackupConfig(models.Model):
     
     def test_retention_policy(self):
         """Test retention policy without actually deleting backups."""
+        require_backup_admin(self)
         self.ensure_one()
-        self.check_access('write')
         
         results = []
         
         for provider in self.all_providers:
             try:
                 # Get list of backups
-                backups = provider.list_backups(prefix=self.database_name)
+                backups = self._get_owned_backups(provider)
                 
                 # Determine which backups would be deleted
                 backups_to_delete = self._get_backups_to_delete(backups)
@@ -384,6 +316,8 @@ class BackupConfig(models.Model):
             message_parts.append(f"Policy: Keep last {self.retention_count} backups")
         elif self.retention_policy == 'days':
             message_parts.append(f"Policy: Keep backups for {self.retention_days} days")
+        else:
+            message_parts.append("Policy: Keep all backups (no cleanup)")
         
         message_parts.append("")
         
@@ -414,8 +348,8 @@ class BackupConfig(models.Model):
     
     def cleanup_old_backups(self):
         """Clean up old backups according to retention policy."""
+        require_backup_admin(self)
         self.ensure_one()
-        self.check_access('write')
         
         is_manual = self.env.context.get('manual_execution', True)
         results = []
@@ -424,7 +358,7 @@ class BackupConfig(models.Model):
         for provider in self.all_providers:
             try:
                 # Get list of backups
-                backups = provider.list_backups(prefix=self.database_name)
+                backups = self._get_owned_backups(provider)
                 
                 # Determine which backups to delete
                 backups_to_delete = self._get_backups_to_delete(backups)
@@ -434,7 +368,7 @@ class BackupConfig(models.Model):
                 
                 # Delete old backups
                 for backup in backups_to_delete:
-                    result = provider.delete_backup(backup['filename'])
+                    result = provider.delete_backup(backup['filename'], backup_info=backup)
                     if result.get('success'):
                         deleted_count += 1
                         _logger.info(
@@ -480,6 +414,8 @@ class BackupConfig(models.Model):
                 message_parts.append(f"Keeping last {self.retention_count} backups per provider")
             elif self.retention_policy == 'days':
                 message_parts.append(f"Keeping backups for {self.retention_days} days")
+            else:
+                message_parts.append("Keeping all backups; no files will be deleted")
             
             message_parts.extend(["", f"Total files deleted: {total_deleted}", ""])
             
@@ -510,33 +446,17 @@ class BackupConfig(models.Model):
             }
     
     def _get_backups_to_delete(self, backups):
-        """Determine which backups should be deleted based on retention policy."""
-        if not backups:
+        if self.retention_policy == 'custom' or not backups:
             return []
-        
-        # Sort backups by creation date (newest first)
-        sorted_backups = sorted(
-            backups, 
-            key=lambda x: x.get('created_date') or x.get('modified_date', datetime.datetime.min),
-            reverse=True
-        )
-        
-        backups_to_delete = []
-        
+        dated = [(backup, utc_datetime(backup.get('created_date') or backup.get('modified_date')))
+                 for backup in backups]
+        # Unknown dates are preserved, and every destination keeps its latest known copy.
+        dated = sorted(((backup, date) for backup, date in dated if date),
+                       key=lambda item: item[1], reverse=True)
         if self.retention_policy == 'count':
-            # Keep only the last N backups
-            if len(sorted_backups) > self.retention_count:
-                backups_to_delete = sorted_backups[self.retention_count:]
-        elif self.retention_policy == 'days':
-            # Delete backups older than N days
-            cutoff_date = datetime.datetime.now() - datetime.timedelta(days=self.retention_days)
-            
-            for backup in sorted_backups:
-                backup_date = backup.get('created_date') or backup.get('modified_date')
-                if backup_date and backup_date < cutoff_date:
-                    backups_to_delete.append(backup)
-        
-        return backups_to_delete
+            return [backup for backup, _date in dated[max(1, self.retention_count):]]
+        cutoff = fields.Datetime.now() - datetime.timedelta(days=self.retention_days)
+        return [backup for backup, date in dated[1:] if date < cutoff]
     
     def _update_backup_statistics(self, result):
         """Update backup statistics after a backup operation."""
@@ -562,7 +482,9 @@ class BackupConfig(models.Model):
         This method runs independently from the backup process to ensure
         email failures don't affect the backup job status.
         """
-        if not self.notification_emails:
+        event = 'warning' if backup_job.status == 'warning' else notification_type
+        enabled = self.notify_success if event == 'success' else self.notify_failure
+        if not enabled or not self.notification_emails:
             _logger.debug("Skipping notification: no recipient emails configured")
             return
 
@@ -574,10 +496,10 @@ class BackupConfig(models.Model):
                 return
 
             # Prepare email content
-            if notification_type == 'success':
+            if event == 'success':
                 subject = "Backup Successful: %s" % self.name
                 body = self._get_success_notification_body(backup_job)
-            elif notification_type == 'warning':
+            elif event == 'warning':
                 subject = "Backup Completed with Warnings: %s" % self.name
                 body = (
                     "The backup was created, but some storage destinations failed.\n\n"
@@ -611,7 +533,7 @@ class BackupConfig(models.Model):
 
             # Build and send email
             _logger.info("Sending backup notification email from %s to %s", sender_email, recipient_emails)
-            msg = mail_server.build_email(
+            msg = mail_server._build_email__(
                 sender_email,
                 recipient_emails,
                 subject,
@@ -719,7 +641,7 @@ class BackupConfig(models.Model):
         })
     
     # Validation methods
-    @api.constrains('active')
+    @api.constrains('active', 'local_provider_ids', 'sftp_provider_ids')
     def _check_providers(self):
         """Ensure at least one provider is configured for active configurations."""
         for record in self:
@@ -730,14 +652,14 @@ class BackupConfig(models.Model):
                 len(record.all_providers) == 0):
                 raise ValidationError("At least one storage provider must be configured for active backup configurations")
 
-    @api.constrains('retention_count')
+    @api.constrains('retention_count', 'retention_policy')
     def _check_retention_count(self):
         """Validate retention count."""
         for record in self:
             if record.retention_policy == 'count' and record.retention_count < 1:
                 raise ValidationError("Retention count must be at least 1")
     
-    @api.constrains('retention_days')
+    @api.constrains('retention_days', 'retention_policy')
     def _check_retention_days(self):
         """Validate retention days."""
         for record in self:
@@ -767,33 +689,76 @@ class BackupConfig(models.Model):
     
     # Scheduled action method
     @api.model
+    @api.private
     def run_scheduled_backups(self):
-        """
-        Run scheduled backups for all active configurations.
-        
-        This method is called by the scheduled action (cron job).
-        """
-        # Find active backup configurations
-        configs = self.search([('active', '=', True)])
-        
-        _logger.info("Running scheduled backups for %d configurations", len(configs))
-        
-        for config in configs:
+        require_backup_admin(self)
+        for config in self.search([('active', '=', True)]):
             try:
-                _logger.info("Starting backup for configuration: %s", config.name)
-                # Set context to indicate programmatic execution
-                backup_job = config.with_context(manual_execution=False).create_backup()
-                _logger.info(
-                    "Backup completed for configuration %s, status: %s", 
-                    config.name, backup_job.status
-                )
-                
-                # Clean up old backups (programmatic execution)
-                config.with_context(manual_execution=False).cleanup_old_backups()
-                
-            except Exception as e:
-                _logger.error(
-                    "Failed to create backup for configuration %s: %s",
-                    config.name, str(e)
-                )
+                with self.env.cr.savepoint():
+                    config.with_context(manual_execution=False).create_backup()
+            except Exception:
+                _logger.exception("Unable to queue backup for %s", config.name)
+
+
+    def _finish_backup(self, job, result):
+        self._update_backup_statistics(result)
+        event = 'failure' if job.status == 'error' else job.status
+        try:
+            with self.env.cr.savepoint():
+                self._send_notification(job, event)
+        except Exception:
+            _logger.exception('Notification failed for backup job %s', job.id)
+        if job.status in ('success', 'warning'):
+            try:
+                with self.env.cr.savepoint():
+                    self.with_context(manual_execution=False).cleanup_old_backups()
+            except Exception:
+                _logger.exception('Retention cleanup failed for backup job %s', job.id)
+
+
+    @staticmethod
+    def _backup_location(info, provider=None):
+        for key in ('file_id', 'full_path', 'file_path', 'remote_path', 'blob_path', 'blob_name'):
+            if info.get(key):
+                location = str(info[key])
+                if provider is not None and provider._name == 'backup.provider.local':
+                    try:
+                        return confined_path(provider.backup_directory, location)
+                    except ValidationError:
+                        return None
+                return location
+        return None
+
+
+    def _get_owned_backups(self, provider):
+        """Only successful, recorded uploads of THIS configuration may be aged out."""
+        owned = set()
+        Job = self.env['backup.job']
+        provider_key = f'{provider._name}:{provider.id}'
+        for job in Job.search([('config_id', '=', self.id), ('status', 'in', ['success', 'warning'])]):
+            try:
+                results = json.loads(job.provider_results or '{}')
+                result = results.get(provider_key) or results.get(provider.name) or {}
+                metadata = result.get('metadata') or {}
+                location = self._backup_location(metadata, provider)
+                if result.get('success') and location:
+                    owned.add((job.backup_filename, location))
+            except (ValueError, TypeError, AttributeError):
+                continue  # Unknown history never grants permission to delete a remote file.
+        if not owned:
+            return []
+        # Legacy filenames can collide between configurations. Preserve ambiguous objects.
+        names = list({name for name, _location in owned})
+        for other in Job.search([('config_id', '!=', self.id), ('backup_filename', 'in', names)]):
+            try:
+                results = json.loads(other.provider_results or '{}')
+                # Separate provider records may point at the same physical directory
+                # or bucket. In ambiguous legacy history, preserve the object.
+                for result in results.values():
+                    location = self._backup_location(result.get('metadata') or {}, provider)
+                    if location:
+                        owned.discard((other.backup_filename, location))
+            except (ValueError, TypeError, AttributeError):
                 continue
+        return [backup for backup in provider.list_backups()
+                if (backup['filename'], self._backup_location(backup, provider)) in owned]

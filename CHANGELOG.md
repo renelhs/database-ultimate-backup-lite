@@ -5,6 +5,44 @@ All notable changes to the Database Ultimate Backup Lite module will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [19.0.1.6.0] - 2026-10-05
+
+### Added
+
+- Queue manual and scheduled backups with duplicate-request protection, isolated
+  job failures, and a dedicated worker. Retrying creates a new job and preserves
+  the original attempt and its logs.
+- Record SHA-256 checksums, fully parse PostgreSQL archives with `pg_restore`,
+  and reject empty SQL files inside ZIP backups.
+- Add regression coverage for the queue, retention, permissions, SFTP host keys,
+  transfer timeouts, and temporary-file cleanup alongside the Odoo 19 tests.
+
+### Security
+
+- Restrict transfer and scheduler methods to internal use, require Backup
+  Administrator access, and validate local and SFTP filenames.
+- Publish verified local uploads atomically with private permissions. Treat
+  verification errors as failures and enforce the configured directory limit.
+- Limit retention to successful uploads recorded for each configuration and
+  destination. Preserve the latest copy, untracked files, and ambiguous history.
+
+### Fixed
+
+- Use Odoo 19's email builder and parameter APIs while preserving partial-success
+  alerts. Keep checksum calculation and timeout handling compatible with Python 3.10.
+- Enforce SFTP transfer timeouts, ignore inactive destinations, generate unique
+  filenames, and distinguish providers that share a display name.
+
+### Changed
+
+- Manual backups now require the enabled Job Queue cron and running Odoo cron
+  workers. Refresh the job form to see the completed result.
+- Existing storage and transfer limits now take effect. Retention relies on the
+  recorded job history; deleting history leaves those copies outside cleanup.
+- Preserve the Odoo 19 ACLs, dump implementation, and 19.0.1.5.0 migration.
+
+---
+
 ## [19.0.1.5.0] - 2026-10-04
 
 ### Added

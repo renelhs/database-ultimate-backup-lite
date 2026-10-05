@@ -3,11 +3,13 @@
 import hashlib
 import os
 import shutil
+import tempfile
 import datetime
 import logging
 
 from odoo import models, fields, api
 from odoo.exceptions import UserError, ValidationError
+from .backup_utils import require_backup_admin, validate_filename, confined_path
 
 _logger = logging.getLogger(__name__)
 
@@ -66,8 +68,8 @@ class BackupProviderLocal(models.Model):
     # Override abstract methods
     def test_connection(self):
         """Test local directory access and permissions."""
+        require_backup_admin(self)
         self.ensure_one()
-        self.check_access('write')
         
         try:
             # Check if directory exists
@@ -79,13 +81,10 @@ class BackupProviderLocal(models.Model):
                 message = "Directory exists and is accessible: %s" % self.backup_directory
             
             # Check write permissions
-            test_file = os.path.join(self.backup_directory, '.write_test')
-
             try:
-                with open(test_file, 'w') as f:
-                    f.write('test')
-
-                os.remove(test_file)
+                with tempfile.TemporaryFile(dir=self.backup_directory, mode='w+') as stream:
+                    stream.write('test')
+                    stream.flush()
                 message += "\n" + "Write permissions: OK"
             except (IOError, OSError) as e:
                 raise UserError("No write permission in directory: %s" % str(e))
@@ -115,12 +114,13 @@ class BackupProviderLocal(models.Model):
     
     def upload_backup(self, backup_file_path, remote_filename):
         """Copy backup file to local directory."""
+        require_backup_admin(self)
+        validate_filename(remote_filename)
         self.ensure_one()
-        self.check_access('write')
         
         try:
             # Determine target directory
-            target_dir = self._get_target_directory()
+            target_dir = confined_path(self.backup_directory, self._get_target_directory(), allow_root=True)
             
             # Ensure target directory exists
             os.makedirs(target_dir, mode=0o755, exist_ok=True)
@@ -137,13 +137,22 @@ class BackupProviderLocal(models.Model):
                     )
             
             # Copy file to target directory
-            target_path = os.path.join(target_dir, remote_filename)
+            target_path = confined_path(self.backup_directory, os.path.join(target_dir, remote_filename))
             
-            shutil.copy2(backup_file_path, target_path)
-            
-            # Verify the copy
-            if not self._verify_backup_integrity(target_path, backup_file_path):
-                raise UserError("Backup verification failed after upload")
+            if self.max_directory_size_gb:
+                used = self._get_directory_size(self.backup_directory)
+                if used + os.path.getsize(backup_file_path) > self.max_directory_size_gb * 1024**3:
+                    raise UserError("Maximum backup directory size would be exceeded.")
+            fd, staging = tempfile.mkstemp(prefix='.upload-', dir=target_dir)
+            os.close(fd)
+            try:
+                shutil.copyfile(backup_file_path, staging)
+                if not self._verify_backup_integrity(staging, backup_file_path):
+                    raise UserError("Backup verification failed after upload")
+                os.replace(staging, target_path)
+            finally:
+                if os.path.exists(staging):
+                    os.unlink(staging)
             
             # Get file stats
             file_stats = os.stat(target_path)
@@ -155,8 +164,8 @@ class BackupProviderLocal(models.Model):
                     'file_path': target_path,
                     'size_bytes': file_stats.st_size,
                     'size_gb': file_stats.st_size / (1024**3),
-                    'created_date': datetime.datetime.fromtimestamp(file_stats.st_ctime),
-                    'modified_date': datetime.datetime.fromtimestamp(file_stats.st_mtime),
+                    'created_date': datetime.datetime.fromtimestamp(file_stats.st_ctime, datetime.timezone.utc).replace(tzinfo=None),
+                    'modified_date': datetime.datetime.fromtimestamp(file_stats.st_mtime, datetime.timezone.utc).replace(tzinfo=None),
                 }
             }
         except Exception as e:
@@ -168,8 +177,9 @@ class BackupProviderLocal(models.Model):
     
     def download_backup(self, remote_filename, local_path):
         """Copy backup file from local directory to specified path."""
+        require_backup_admin(self)
+        validate_filename(remote_filename)
         self.ensure_one()
-        self.check_access('write')
         
         try:
             # Find the backup file
@@ -197,8 +207,8 @@ class BackupProviderLocal(models.Model):
     
     def list_backups(self, prefix=None):
         """List backup files in local directory."""
+        require_backup_admin(self)
         self.ensure_one()
-        self.check_access('write')
         
         try:
             backups = []
@@ -224,11 +234,11 @@ class BackupProviderLocal(models.Model):
                         
                         backups.append({
                             'filename': filename,
-                            'full_path': file_path,
+                            'full_path': confined_path(self.backup_directory, file_path),
                             'size_bytes': file_stats.st_size,
                             'size_gb': file_stats.st_size / (1024**3),
-                            'created_date': datetime.datetime.fromtimestamp(file_stats.st_ctime),
-                            'modified_date': datetime.datetime.fromtimestamp(file_stats.st_mtime),
+                            'created_date': datetime.datetime.fromtimestamp(file_stats.st_ctime, datetime.timezone.utc).replace(tzinfo=None),
+                            'modified_date': datetime.datetime.fromtimestamp(file_stats.st_mtime, datetime.timezone.utc).replace(tzinfo=None),
                         })
             
             # Sort by creation date (newest first)
@@ -237,16 +247,21 @@ class BackupProviderLocal(models.Model):
             return backups
         except Exception as e:
             _logger.error("Failed to list backups: %s", str(e))
-            return []
+            raise UserError("Unable to list backups: %s" % e) from e
     
-    def delete_backup(self, remote_filename):
+    def delete_backup(self, remote_filename, backup_info=None):
         """Delete backup file from local directory."""
+        require_backup_admin(self)
+        validate_filename(remote_filename)
         self.ensure_one()
-        self.check_access('write')
         
         try:
-            backup_file_path = self._find_backup_file(remote_filename)
-            
+            backup_file_path = (confined_path(self.backup_directory, backup_info['full_path'])
+                                if backup_info and backup_info.get('full_path')
+                                else self._find_backup_file(remote_filename))
+            if os.path.basename(backup_file_path or '') != remote_filename:
+                raise UserError('Backup location does not match its filename.')
+
             if not backup_file_path or not os.path.exists(backup_file_path):
                 return {
                     'success': False,
@@ -267,8 +282,8 @@ class BackupProviderLocal(models.Model):
     
     def get_storage_info(self):
         """Get local storage information."""
+        require_backup_admin(self)
         self.ensure_one()
-        self.check_access('write')
         
         try:
             # Get directory size
@@ -312,18 +327,14 @@ class BackupProviderLocal(models.Model):
         return os.path.join(self.backup_directory, subdir)
     
     def _find_backup_file(self, filename):
-        """Find a backup file in the directory structure."""
-        # First check the root directory
-        file_path = os.path.join(self.backup_directory, filename)
-        if os.path.exists(file_path):
-            return file_path
-        
-        # Search in subdirectories
-        for root, dirs, files in os.walk(self.backup_directory):
+        validate_filename(filename)
+        matches = []
+        for root, _dirs, files in os.walk(self.backup_directory):
             if filename in files:
-                return os.path.join(root, filename)
-        
-        return None
+                matches.append(confined_path(self.backup_directory, os.path.join(root, filename)))
+        if len(matches) > 1:
+            raise UserError("Several backups have this name; an exact recorded location is required.")
+        return matches[0] if matches else None
     
     def _is_backup_file(self, filename):
         """Check if filename is a backup file."""
@@ -352,17 +363,17 @@ class BackupProviderLocal(models.Model):
         """Verify that two files are identical."""
         try:
             def get_file_hash(filepath):
-                hash_md5 = hashlib.md5()
+                digest = hashlib.sha256()
                 with open(filepath, "rb") as f:
                     for chunk in iter(lambda: f.read(4096), b""):
-                        hash_md5.update(chunk)
-                return hash_md5.hexdigest()
+                        digest.update(chunk)
+                return digest.hexdigest()
             
             return get_file_hash(file1) == get_file_hash(file2)
             
         except Exception as e:
             _logger.warning("Backup integrity verification failed: %s", str(e))
-            return True  # Don't fail the backup due to verification issues
+            return False
     
     # Validation methods
     @api.constrains('backup_directory')
@@ -375,9 +386,9 @@ class BackupProviderLocal(models.Model):
             if not os.path.isabs(record.backup_directory):
                 raise ValidationError("Backup directory must be an absolute path")
     
-    @api.constrains('min_free_space_gb')
+    @api.constrains('min_free_space_gb', 'max_directory_size_gb')
     def _check_min_free_space(self):
         """Validate minimum free space value."""
         for record in self:
-            if record.min_free_space_gb < 0:
+            if record.min_free_space_gb < 0 or record.max_directory_size_gb < 0:
                 raise ValidationError("Minimum free space must be non-negative")
