@@ -59,7 +59,7 @@ The list ships inside the module folder, as `database_ultimate_backup_lite/requi
 pip install -r /path/to/addons/database_ultimate_backup_lite/requirements.txt
 ```
 
-**On Odoo.sh**, requirements files inside module folders are not read: copy the lines of `database_ultimate_backup_lite/requirements.txt` into the `requirements.txt` of the folder that contains the module (usually the repository root).
+**Odoo.sh is not supported** by the Lite edition: Odoo.sh blocks `pg_dump` for tenant databases, so backups fail before any upload. Odoo.sh backups require the Full edition.
 
 The manifest's `external_dependencies` declare the minimum AsyncSSH version, so Odoo refuses to install or upgrade the module while it is missing or too old. Checking that version requires the `packaging` library, which is included in the requirements file.
 

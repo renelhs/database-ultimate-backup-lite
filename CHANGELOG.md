@@ -13,10 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   includes the Python dependencies. The repository-root file now includes it
   with `-r`. It adds `packaging`, which Odoo 19 needs to check versioned
   `external_dependencies`.
-- Document installing the requirements on self-hosted servers and on Odoo.sh
-  (which only reads requirements files in the folder that contains the module),
-  and the recommended `odoo.conf` memory and time limits for large databases,
-  on the app page and in the README.
+- Document installing the requirements and the recommended `odoo.conf` memory
+  and time limits for large databases, on the app page and in the README.
 
 ### Changed
 

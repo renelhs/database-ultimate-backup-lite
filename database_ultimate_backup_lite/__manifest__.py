@@ -56,8 +56,6 @@
         ------------
         1. Install Python dependencies with the Python that runs Odoo:
            pip install -r database_ultimate_backup_lite/requirements.txt
-           (on Odoo.sh, add its lines to the requirements.txt of the folder
-           that contains the module)
         2. Install the module from the Apps menu
 
     """,

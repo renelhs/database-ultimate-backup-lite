@@ -546,7 +546,7 @@
                                     </p>
                                     <pre style="background-color: #f6f8fa; color: #293445; padding: 12px 15px; border-radius: 4px; white-space: pre-wrap;"><code>pip install -r /path/to/your/addons/database_ultimate_backup_lite/requirements.txt</code></pre>
                                     <p style="color: #64728f;">
-                                        <strong>Odoo.sh:</strong> Odoo.sh does not read requirements files inside module folders. Copy the lines of that file into the <code>requirements.txt</code> of the folder that contains the module (usually the root of your repository).
+                                        <strong>Odoo.sh:</strong> not supported by the Lite edition, because Odoo.sh blocks <code>pg_dump</code> for tenant databases. Odoo.sh backups require the Full edition.
                                     </p>
 
                                     <h3 style="color: #667eea; margin-top: 30px;">1. Configure a Storage Provider</h3>
@@ -664,7 +664,7 @@ limit_time_real_cron = 10800</code></pre>
                                         </div>
                                         <div class="d-flex m-0" style="color:#7A7979;">
                                             <ul class="pl-3 mb-0">
-                                                <li><strong>Python requirements included with the module</strong> - the download now contains <code>requirements.txt</code>, and the Configuration tab explains how to install it on your own server or on Odoo.sh.</li>
+                                                <li><strong>Python requirements included with the module</strong> - the download now contains <code>requirements.txt</code>, and the Configuration tab explains how to install it.</li>
                                                 <li><strong>Recommended server limits for large databases</strong> - the Configuration tab now lists the <code>odoo.conf</code> memory and time limits that large backups need.</li>
                                                 <li><strong>AsyncSSH version checked on install and upgrade</strong> - Odoo now refuses to install or upgrade the module while AsyncSSH is missing or too old, instead of failing later during an SFTP backup.</li>
                                                 <li><strong>Upgrade note</strong> - before upgrading, install the updated <code>requirements.txt</code>, which now includes <code>packaging</code>.</li>
