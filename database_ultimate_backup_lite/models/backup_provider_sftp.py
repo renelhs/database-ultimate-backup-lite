@@ -16,7 +16,7 @@ try:
 except ImportError:
     asyncssh = None
     _logger.warning(
-        "AsyncSSH library not found. Please install it with: pip install asyncssh"
+        'AsyncSSH library not found. Please install it with: pip install "asyncssh<2.24"'
     )
 
 
@@ -125,7 +125,7 @@ class BackupProviderSftp(models.Model):
         self.ensure_one()
 
         if not asyncssh:
-            error_msg = "AsyncSSH library not available. Please install it with: pip install asyncssh"
+            error_msg = 'AsyncSSH library not available. Please install it with: pip install "asyncssh<2.24"'
             return {
                 'success': False,
                 'message': error_msg

@@ -50,6 +50,14 @@
         module — restrict membership of the backup administrator group
         accordingly.
 
+        Installation
+        ------------
+        1. Install Python dependencies with the Python that runs Odoo:
+           pip install -r database_ultimate_backup_lite/requirements.txt
+           (on Odoo.sh, add its lines to the requirements.txt of the folder
+           that contains the module)
+        2. Install the module from the Apps menu
+
     """,
 
     'author': "René Hechavarría",
@@ -57,14 +65,17 @@
     'maintainer': "René Hechavarría",
 
     'category': 'Administration',
-    'version': '20.0.1.1.0',
+    'version': '20.0.1.1.1',
 
     # Module dependencies
     'depends': ['base'],
 
-    # External dependencies
+    # External dependencies. Minimum version only: Odoo checks it on install
+    # and on every upgrade (including -u all), so the upper bound stays in
+    # requirements.txt. Parsing the version requires the `packaging` library
+    # listed there.
     'external_dependencies': {
-        'python': ['asyncssh'],
+        'python': ['asyncssh>=2.21.0'],
     },
 
     # Data files

@@ -205,6 +205,15 @@ class BackupJob(models.Model):
     # alive) from the leftover of a killed worker (owner process gone).
     _TEMP_OWNER_MARKER = '.odoo_backup_owner'
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        # Custom PostgreSQL dumps never contain file-backed attachments.
+        vals_list = [
+            dict(vals, include_filestore=False) if vals.get('backup_format') == 'dump' else vals
+            for vals in vals_list
+        ]
+        return super().create(vals_list)
+
     def _process_backup(self):
         """
         Process the backup job.

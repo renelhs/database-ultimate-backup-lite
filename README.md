@@ -49,9 +49,15 @@ Credentials are protected by Odoo access permissions; the module does not encryp
 
 ### 1. Install Dependencies
 
+The list ships inside the module folder, as `database_ultimate_backup_lite/requirements.txt`, so it is also included in the module download. Install it with the same Python (or virtual environment) that runs Odoo:
+
 ```bash
-pip install asyncssh
+pip install -r /path/to/addons/database_ultimate_backup_lite/requirements.txt
 ```
+
+**On Odoo.sh**, requirements files inside module folders are not read: copy the lines of `database_ultimate_backup_lite/requirements.txt` into the `requirements.txt` of the folder that contains the module (usually the repository root).
+
+The manifest's `external_dependencies` declare the minimum AsyncSSH version, so Odoo refuses to install or upgrade the module while it is missing or too old. Checking that version requires the `packaging` library, which is included in the requirements file.
 
 ### 2. Install the Module
 
@@ -180,6 +186,21 @@ Customize backup filenames using variables:
 
 A unique suffix is always appended to prevent a repeated filename template from overwriting an earlier run. Partial uploads remain **Warning** and use the failure email preference, even when success emails are disabled.
 
+## Odoo Configuration for Large Databases
+
+Backups, manual ones included, run in Odoo's cron worker, which is bound by `limit_time_real_cron`; when that option is not set, Odoo applies `limit_time_real` (120 seconds by default). On large databases the worker is killed before the dump or upload finishes. Adjust `odoo.conf` and restart Odoo; these values suit a 20-50 GB backup:
+
+```ini
+limit_time_cpu = 5400
+limit_time_real_cron = 10800
+limit_memory_soft = 2147483648
+limit_memory_hard = 2684354560
+```
+
+- **Time:** aim for 2-3 times the duration your backup jobs actually take (see the job's **Duration**).
+- **Memory:** keep both memory limits at least at Odoo's defaults (2 GB soft, 2.5 GB hard). They limit virtual memory per worker, not physical RAM; lower values can make backups fail with "Cannot allocate memory".
+- **Comments:** `odoo.conf` only accepts comments on their own line (starting with `;` or `#`). A line such as `limit_memory_hard = 2684354560 ; 2.5 GB` keeps the comment as part of the value and Odoo fails to start.
+
 ## Troubleshooting
 
 ### Common Issues
@@ -194,8 +215,11 @@ A unique suffix is always appended to prevent a repeated filename template from 
 - Run cleanup manually to free space
 
 **"AsyncSSH library not found"**
-- Install the required dependency: `pip install asyncssh`
+- Install the requirements: `pip install -r /path/to/addons/database_ultimate_backup_lite/requirements.txt`
 - Restart the Odoo service after installation
+
+**"Cannot allocate memory" or the backup stops after a few minutes**
+- The cron worker reached `limit_memory_hard` or `limit_time_real_cron`; see [Odoo Configuration for Large Databases](#odoo-configuration-for-large-databases)
 
 **"SFTP connection failed"**
 - Verify hostname, port, username, and password

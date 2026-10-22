@@ -109,7 +109,7 @@ class BackupConfig(models.Model):
     notify_failure = fields.Boolean(
         string='Notify on Failure',
         default=True,
-        help='Send notification when backup fails'
+        help='Send notification when the backup fails or some storage destinations fail'
     )
     notification_emails = fields.Char(
         string='Notification Emails',
