@@ -5,7 +5,7 @@
 ### Added
 
 - **`requirements.txt` ships inside the module folder**, so the store download includes the Python dependencies. The repository-root file now includes it with `-r`. It adds `packaging`, which Odoo 20 needs to check versioned `external_dependencies`.
-- **Installation and server-limit guidance on the app page and in the README**: installing the requirements on self-hosted servers and on Odoo.sh (which only reads requirements files in the folder that contains the module), and the recommended `odoo.conf` memory and time limits for large databases.
+- **Installation and server-limit guidance on the app page and in the README**: installing the requirements, and the recommended `odoo.conf` memory and time limits for large databases.
 - Regression coverage aligned with 19.0 for the filestore option, corrupt ZIP members, `pg_dump` failures, reader permissions, partial-upload warnings and the scheduler's filestore selection.
 
 ### Fixed
