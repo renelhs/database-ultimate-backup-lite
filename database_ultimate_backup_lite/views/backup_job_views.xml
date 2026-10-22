@@ -5,14 +5,16 @@
         <field name="name">backup.job.list</field>
         <field name="model">backup.job</field>
         <field name="arch" type="xml">
-            <list string="Backup Jobs" decoration-success="status == 'success'" decoration-danger="status == 'error'" decoration-warning="status in ('running', 'warning')">
+            <list string="Backup Jobs" create="false" decoration-success="status == 'success'" decoration-danger="status == 'error'" decoration-warning="status in ('running', 'warning')">
                 <field name="display_name"/>
-                <field name="config_id"/>
-                <field name="database_name"/>
+                <field name="config_id" optional="hide"/>
+                <field name="database_name" optional="hide"/>
                 <field name="backup_format"/>
+                <field name="include_filestore" optional="hide"/>
                 <field name="start_time"/>
                 <field name="duration_human"/>
                 <field name="backup_size_human"/>
+                <field name="backup_sha256" optional="hide"/>
                 <field name="verification_status" widget="badge" decoration-success="verification_status == 'verified'" decoration-danger="verification_status == 'failed'"/>
                 <field name="status" widget="badge" decoration-success="status == 'success'" decoration-danger="status == 'error'" decoration-warning="status in ('running', 'warning')" decoration-info="status == 'pending'"/>
             </list>
@@ -26,9 +28,13 @@
         <field name="arch" type="xml">
             <form string="Backup Job" create="false" edit="false">
                 <header>
-                    <field name="status" widget="statusbar" statusbar_visible="pending,running,success,error"/>
+                    <button name="retry_backup" type="object" string="Retry Backup"
+                            groups="database_ultimate_backup_lite.group_backup_admin"
+                            invisible="status not in ('error', 'warning')"/>
+                    <field name="status" widget="statusbar" statusbar_visible="pending,running,success,warning,error"/>
                 </header>
                 <sheet>
+                    <div class="alert alert-info" role="status" invisible="status != 'pending'">This backup is queued. The backup worker processes it in the background. Refresh to see the result.</div>
                     <div class="oe_title">
                         <h1>
                             <field name="display_name"/>
@@ -40,6 +46,7 @@
                             <field name="config_id"/>
                             <field name="database_name"/>
                             <field name="backup_format"/>
+                            <field name="include_filestore" invisible="backup_format != 'zip'"/>
                             <field name="backup_filename"/>
                         </group>
                         <group string="Timing">
@@ -54,6 +61,7 @@
                         <group string="Backup Details">
                             <field name="backup_size_mb" invisible="1"/>
                             <field name="backup_size_human"/>
+                            <field name="backup_sha256" invisible="not backup_sha256"/>
                             <field name="verification_status" widget="badge" decoration-success="verification_status == 'verified'" decoration-danger="verification_status == 'failed'"/>
                         </group>
                     </group>
@@ -127,8 +135,8 @@
                 No backup jobs found
             </p>
             <p>
-                Backup jobs will appear here when you create backups from your configurations.
-                Each job tracks the execution, timing, and results of individual backup operations.
+                Jobs appear after a backup runs. Create a backup configuration and
+                use Create Backup Now to start one.
             </p>
         </field>
     </record>

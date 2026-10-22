@@ -13,6 +13,18 @@
             <field name="active">False</field>
         </record>
 
+        <!-- Queued manual and scheduled backups -->
+        <record id="backup_job_cron" model="ir.cron">
+            <field name="name">Database Ultimate Backup Lite Job Queue</field>
+            <field name="model_id" ref="model_backup_job"/>
+            <field name="state">code</field>
+            <field name="code">model.run_pending_backups()</field>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">minutes</field>
+            <field name="active">True</field>
+        </record>
+
         <!-- Backup Cleanup Cron Job -->
         <record id="backup_cleanup_cron" model="ir.cron">
             <field name="name">Database Ultimate Backup Lite Cleanup</field>

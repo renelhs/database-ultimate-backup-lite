@@ -1,1 +1,2 @@
-asyncssh>=2.21.0
+# The list lives inside the module folder so it ships with the module.
+-r database_ultimate_backup_lite/requirements.txt

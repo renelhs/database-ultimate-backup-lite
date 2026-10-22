@@ -15,9 +15,9 @@
         -------------
         * **Local Storage**: Store backups on local filesystem or network-mounted drives
         * **SFTP Remote Storage**: Securely transfer backups to remote servers via SSH/SFTP
-        * **Backup Formats**: ZIP archives (with filestore) or PostgreSQL dumps
-        * **Integrity Verification**: Automatic verification after backup creation
-        * **Flexible Scheduling**: Automated backups via configurable cron jobs
+        * **Backup Formats**: ZIP archives with or without filestore, or PostgreSQL custom dumps
+        * **Integrity Verification**: ZIP CRC checks, full PostgreSQL archive parsing, and recorded SHA-256 checksums
+        * **Flexible Scheduling**: Queued manual and scheduled backups via configurable cron jobs
         * **Retention Policies**: Keep last N backups or retain for N days
         * **Automated Cleanup**: Automatic removal of old backups based on policy
         * **Job Monitoring**: Track backup history, status, duration, and file sizes
@@ -37,7 +37,7 @@
         * Two-tier access control: User and Administrator roles. Creating a
           database dump requires the Backup Administrator group (or the backup
           cron user); read-only Backup Users cannot trigger dumps.
-        * Secure credential storage
+        * Administrator-only access to SFTP credentials
         * Granular model-level permissions
 
         Security Note: list_db and database dumps
@@ -52,11 +52,12 @@
         module — restrict membership of the backup administrator group
         accordingly.
 
-        Need Multi-Cloud Storage?
-        -------------------------
-        Upgrade to Database Ultimate Backup (Full) for enterprise multi-cloud support:
-        AWS S3, Azure Blob Storage, Google Cloud Storage, DigitalOcean Spaces,
-        parallel uploads, server-side encryption, and more!
+        Installation
+        ------------
+        1. Install Python dependencies with the Python that runs Odoo:
+           pip install -r database_ultimate_backup_lite/requirements.txt
+        2. Install the module from the Apps menu
+
     """,
 
     'author': "René Hechavarría",
@@ -64,14 +65,17 @@
     'maintainer': "René Hechavarría",
 
     'category': 'Administration',
-    'version': '18.0.1.2.1',
+    'version': '18.0.1.3.0',
 
     # Module dependencies
     'depends': ['base'],
 
-    # External dependencies
+    # External dependencies. Minimum version only: Odoo checks it on install
+    # and on every upgrade (including -u all), so the upper bound stays in
+    # requirements.txt. Parsing the version requires the `packaging` library
+    # listed there.
     'external_dependencies': {
-        'python': ['asyncssh'],
+        'python': ['asyncssh>=2.21.0'],
     },
 
     # Data files
@@ -88,7 +92,6 @@
         'views/backup_config_views.xml',
         'views/backup_job_views.xml',
         'views/backup_provider_views.xml',
-        'views/backup_upgrade_teaser_views.xml',
         'views/menus.xml'
     ],
 

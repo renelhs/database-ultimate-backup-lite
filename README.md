@@ -11,9 +11,9 @@ A free, reliable database backup solution for Odoo 18.0 with **local and SFTP re
 ### Core Capabilities
 - **Local Storage**: Store backups on local filesystem or network-mounted drives
 - **SFTP Remote Storage**: Securely transfer backups to remote servers via SSH/SFTP
-- **Backup Formats**: ZIP archives (with filestore) or PostgreSQL dumps
-- **Integrity Verification**: Automatic verification of backup files after creation
-- **Flexible Scheduling**: Automated backups via cron jobs with configurable intervals
+- **Backup Formats**: ZIP archives with or without filestore, or PostgreSQL custom dumps
+- **Integrity Verification**: ZIP CRC checks, nonempty SQL validation, complete PostgreSQL archive parsing, and a recorded SHA-256 checksum
+- **Flexible Scheduling**: Manual and scheduled requests are queued for a dedicated backup worker
 
 ### Advanced Management
 - **Retention Policies**: Keep last N backups or retain for N days
@@ -40,14 +40,28 @@ A free, reliable database backup solution for Odoo 18.0 with **local and SFTP re
 - Two-tier access control (User and Administrator)
 - Granular model-level permissions
 - System user for automated operations
+- Administrator-only access to SFTP passwords and transfer operations
+- Local paths confined to the configured storage directory; verified uploads are published atomically with private file permissions
+
+Credentials are protected by Odoo access permissions; the module does not encrypt them in the database. ZIP/dump validation and checksums detect archive problems but do not replace a restore test. SFTP upload verification compares file sizes.
+
+### Upgrading to 18.0.1.3.0
+
+Upgrade the module to create its Job Queue scheduled action, and keep Odoo cron workers running for manual and scheduled backups. The upgrade preserves the existing configuration and filestore choices. Review the configured limits: the local directory maximum (100 GB by default) and SFTP transfer timeout (3600 seconds by default) are now enforced; `0` disables either limit. Keep job history so retention can identify recorded copies. Odoo 18's Python 3.10 minimum and the `asyncssh<2.24` dependency remain supported.
 
 ## Installation
 
 ### 1. Install Dependencies
 
+The list ships inside the module folder, as `database_ultimate_backup_lite/requirements.txt`, so it is also included in the module download. Install it with the same Python (or virtual environment) that runs Odoo:
+
 ```bash
-pip install asyncssh
+pip install -r /path/to/addons/database_ultimate_backup_lite/requirements.txt
 ```
+
+**Odoo.sh is not supported** by the Lite edition: Odoo.sh blocks `pg_dump` for tenant databases, so backups fail before any upload. Odoo.sh backups require the Full edition.
+
+The manifest's `external_dependencies` declare the minimum AsyncSSH version, so Odoo refuses to install or upgrade the module while it is missing or too old. Checking that version requires the `packaging` library, which is included in the requirements file.
 
 ### 2. Install the Module
 
@@ -103,7 +117,8 @@ Navigate to **Database Ultimate Backup Lite > Backup Configurations > Create**
 ```
 Name: Daily Production Backup
 Database: [automatically populated with current database]
-Backup Format: ZIP Archive (includes filestore)
+Backup Format: ZIP Archive
+Include Filestore: Yes
 
 Storage Providers:
 - Select your local and/or SFTP storage providers
@@ -123,19 +138,22 @@ Click **Save**.
 ### Step 3: Test Your Configuration
 
 1. Click the **Test Providers** button to verify all providers are accessible
-2. Click the **Create Backup Now** button to perform a manual test backup
-3. Go to **Backup Jobs** to monitor the backup progress and results
+2. Click **Create Backup Now** to queue a manual test backup
+3. Open **Backup Jobs** and refresh to see the completed result, logs and SHA-256 checksum
 4. Verify the backup file exists in your storage location
+
+The **Database Ultimate Backup Lite Job Queue** scheduled action is enabled on installation and processes pending jobs every minute. Odoo cron workers must be running. Uploads remain sequential. Repeated requests for the same configuration are rejected while a job is pending or running; **Retry Backup** creates a new job and preserves the previous attempt.
 
 ### Step 4: Enable Automated Backups
 
-The module includes a scheduled action (cron job) that runs daily by default.
+The scheduler has a daily interval and is disabled initially. Activate it when your configuration is ready.
 
 To customize the schedule:
 1. Go to **Settings > Technical > Automation > Scheduled Actions**
 2. Search for "Database Ultimate Backup Lite Scheduler"
 3. Edit the **Execute Every** field to your preferred interval
 4. Set the **Next Execution Date** if needed
+5. Enable the scheduled action
 
 **Active backup configurations** will automatically run according to the cron schedule.
 
@@ -145,24 +163,51 @@ To customize the schedule:
 
 | Format | Description | Use Case |
 |--------|-------------|----------|
-| **ZIP Archive** | Complete backup including database and filestore | Full system backups, recommended for production |
-| **PostgreSQL Dump** | SQL dump only, no filestore | Database-only backups, smaller file size |
+| **ZIP Archive + filestore** | Database and file-backed attachments | Full system backups, recommended for production |
+| **ZIP Archive without filestore** | Database packaged as ZIP, without file-backed attachments | Smaller backups when the filestore is backed up separately |
+| **PostgreSQL Dump** | PostgreSQL custom-format dump, no filestore | Database-only backups |
+
+Odoo 18's database manager can restore both ZIP backups and PostgreSQL custom dumps. Custom dumps can also be restored with `pg_restore --no-owner --dbname=restored_db backup.dump` into an empty database. Backups without the filestore cannot recover file-backed attachments; restore the matching filestore separately if needed.
+
+**Include Filestore** is enabled by default and applies only to ZIP backups. Each job records its own selection, so changing a configuration does not rewrite the backup history. Updating from an earlier release preserves the existing ZIP-with-filestore behavior.
+
+Only Backup Administrators can run backups, test connections, transfer or delete backup files, and read SFTP passwords. Backup Users retain read-only access to configurations and job history. A backup with failed destinations is shown as a warning and uses the failure-notification setting.
 
 ### Retention Policies
 
 | Policy | Description | Example |
 |--------|-------------|---------|
 | **Keep Last N Backups** | Maintains the most recent N backups | Keep last 7 backups = 1 week of daily backups |
-| **Keep for N Days** | Retains backups newer than N days | Keep 30 days = monthly retention |
+| **Keep for N Days** | Retains recent backups and always preserves the newest known copy | Keep 30 days, plus the latest copy if all are older |
+| **Keep All Backups** | Disables automatic deletion for this configuration | Archive without automatic retention |
+
+Retention only deletes successful uploads recorded for the current configuration and destination. Untracked files, unknown dates and ambiguous legacy locations are preserved. Keep the job history: deleting it also removes the evidence used to identify owned copies. Cleanup runs after successful or partially successful backups and through the cleanup scheduled action.
 
 ### Backup Name Template
 
 Customize backup filenames using variables:
 - `{database}` - Database name
-- `{timestamp}` - Timestamp in YYYYMMDD_HHMMSS format
-- `{format}` - File extension (zip or sql)
+- `{timestamp}` - Timestamp including microseconds
+- `{format}` - File extension (`zip` or `dump`)
 
 **Default**: `{database}_{timestamp}.{format}`
+
+A unique suffix is always appended to prevent a repeated filename template from overwriting an earlier run. Partial uploads remain **Warning** and use the failure email preference, even when success emails are disabled.
+
+## Odoo Configuration for Large Databases
+
+Backups, manual ones included, run in Odoo's cron worker, which is bound by `limit_time_real_cron`; when that option is not set, Odoo applies `limit_time_real` (120 seconds by default). On large databases the worker is killed before the dump or upload finishes. Adjust `odoo.conf` and restart Odoo; these values suit a 20-50 GB backup:
+
+```ini
+limit_time_cpu = 5400
+limit_time_real_cron = 10800
+limit_memory_soft = 2147483648
+limit_memory_hard = 2684354560
+```
+
+- **Time:** aim for 2-3 times the duration your backup jobs actually take (see the job's **Duration**).
+- **Memory:** keep both memory limits at least at Odoo's defaults (2 GB soft, 2.5 GB hard). They limit virtual memory per worker, not physical RAM; lower values can make backups fail with "Cannot allocate memory".
+- **Comments:** `odoo.conf` only accepts comments on their own line (starting with `;` or `#`). A line such as `limit_memory_hard = 2684354560 ; 2.5 GB` keeps the comment as part of the value and Odoo fails to start.
 
 ## Troubleshooting
 
@@ -178,8 +223,11 @@ Customize backup filenames using variables:
 - Run cleanup manually to free space
 
 **"AsyncSSH library not found"**
-- Install the required dependency: `pip install asyncssh`
+- Install the requirements: `pip install -r /path/to/addons/database_ultimate_backup_lite/requirements.txt`
 - Restart the Odoo service after installation
+
+**"Cannot allocate memory" or the backup stops after a few minutes**
+- The cron worker reached `limit_memory_hard` or `limit_time_real_cron`; see [Odoo Configuration for Large Databases](#odoo-configuration-for-large-databases)
 
 **"SFTP connection failed"**
 - Verify hostname, port, username, and password

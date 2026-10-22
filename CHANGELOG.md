@@ -5,6 +5,84 @@ All notable changes to the Database Ultimate Backup Lite module will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.0.1.3.0] - 2026-10-22
+
+Brings 18.0 to the feature level of 19.0.1.6.1 (the 19.0.1.5.0, 19.0.1.6.0
+and 19.0.1.6.1 releases), adapted to Odoo 18.
+
+### Added
+
+- Optional filestore inclusion for ZIP backups, enabled by default and recorded
+  on each backup job. Existing ZIP jobs retain their original filestore policy;
+  PostgreSQL custom dumps are marked as excluding the filestore.
+- Queue manual and scheduled backups with duplicate-request protection, isolated
+  job failures, and a dedicated worker. Retrying creates a new job and preserves
+  the original attempt and its logs.
+- Record SHA-256 checksums, fully parse PostgreSQL archives with `pg_restore`,
+  and reject empty SQL files inside ZIP backups.
+- Ship `requirements.txt` inside the module folder, so the store download
+  includes the Python dependencies. The repository-root file now includes it
+  with `-r`. It adds `packaging`, which Odoo 18 needs to check versioned
+  `external_dependencies`.
+- Document installing the requirements and the recommended `odoo.conf` memory
+  and time limits for large databases, on the app page and in the README.
+- Regression tests for the queue, retention, permissions, SFTP host keys,
+  transfer timeouts, temporary-file cleanup, the filestore option and the
+  upgrade migration.
+
+### Security
+
+- Restrict transfer and scheduler methods to internal use, require Backup
+  Administrator access, and validate local and SFTP filenames. Check write
+  access before storage operations, connection tests, and retention actions.
+- Publish verified local uploads atomically with private permissions. Treat
+  verification errors as failures and enforce the configured directory limit.
+- Limit retention to successful uploads recorded for each configuration and
+  destination. Preserve the latest copy, untracked files, and ambiguous history.
+- Exclude filestore symlinks that resolve outside the filestore root.
+
+### Fixed
+
+- Reject failed `pg_dump` processes and report their error output, including
+  custom dumps that produced partial content. Reject empty backups even when
+  optional integrity verification is disabled.
+- Detect corrupt ZIP members returned by `testzip()` before uploading backups.
+- Preserve partial-upload warnings in configuration statistics, UI notifications,
+  and email alerts instead of reporting complete success.
+- Enforce SFTP transfer timeouts, ignore inactive destinations, generate unique
+  filenames, and distinguish providers that share a display name.
+- Correct the failed-backup search filter.
+
+### Changed
+
+- Declare the minimum AsyncSSH version in `external_dependencies`
+  (`asyncssh>=2.21.0`): Odoo now refuses to install or upgrade the module
+  (including `-u all`) while it is missing or older. The `<2.24` upper bound
+  stays in `requirements.txt` only.
+- Refresh the app icon, banner, store layout, and screenshots (captured in
+  Odoo 19) while preserving prior release notes.
+- Remove the Full-edition dashboard and cloud-provider preview menus, actions,
+  and transient model. Keep unobtrusive notes in storage and notification
+  settings, plus the edition comparison and Full-edition link on the store page.
+
+### Compatibility and upgrade notes
+
+- Ported from 19.0 while keeping Odoo 18 APIs: group definitions with
+  `category_id`, `ir.mail_server.build_email`, `groups_id` on users, Python 3.10
+  support, and cron progress through `_notify_progress` plus an explicit
+  commit, since `ir.cron._commit_progress` only exists from 19.0.
+- Install the updated `requirements.txt` (including `packaging`) before
+  upgrading the module; otherwise Odoo blocks the upgrade with a message naming
+  the missing library.
+- Update the module to create the Job Queue cron and the new filestore fields,
+  and to run the `18.0.1.3.0` migration. Manual backups now require the enabled
+  Job Queue cron and running Odoo cron workers; refresh the job form to see the
+  completed result.
+- Existing storage and transfer limits now take effect. Retention relies on the
+  recorded job history; deleting history leaves those copies outside cleanup.
+
+---
+
 ## [18.0.1.2.1] - 2026-06-26
 
 ### Changed

@@ -3,7 +3,8 @@
 import logging
 
 from abc import abstractmethod
-from odoo import models, fields
+from odoo import api, models, fields
+from .backup_utils import require_backup_admin
 
 _logger = logging.getLogger(__name__)
 
@@ -38,9 +39,9 @@ class BackupProviderAbstract(models.AbstractModel):
         readonly=True
     )
     
-    def name_get(self):
-        """Return name with provider type for better identification."""
-        result = []
+    @api.depends('name')
+    def _compute_display_name(self):
+        """Show the provider type alongside its name."""
         for record in self:
             if record.name and hasattr(record, 'provider_type') and record.provider_type:
                 # Get provider type name from field selection if available
@@ -54,10 +55,10 @@ class BackupProviderAbstract(models.AbstractModel):
                 name = record.name
             else:
                 name = f"Provider #{record.id}" if record.id else "New Provider"
-            result.append((record.id, name))
-        return result
+            record.display_name = name
     
     # Abstract methods that must be implemented by concrete providers
+    @api.private
     @abstractmethod
     def test_connection(self):
         """
@@ -74,6 +75,8 @@ class BackupProviderAbstract(models.AbstractModel):
         
         This method calls test_connection() and displays appropriate notifications.
         """
+        self.ensure_one()
+        require_backup_admin(self)
         try:
             result = self.test_connection()
             
@@ -121,6 +124,7 @@ class BackupProviderAbstract(models.AbstractModel):
                 }
             }
     
+    @api.private
     @abstractmethod
     def upload_backup(self, backup_file_path, remote_filename):
         """
@@ -135,6 +139,7 @@ class BackupProviderAbstract(models.AbstractModel):
         """
         pass
     
+    @api.private
     @abstractmethod
     def download_backup(self, remote_filename, local_path):
         """
@@ -149,6 +154,7 @@ class BackupProviderAbstract(models.AbstractModel):
         """
         pass
     
+    @api.private
     @abstractmethod
     def list_backups(self, prefix=None):
         """
@@ -162,8 +168,9 @@ class BackupProviderAbstract(models.AbstractModel):
         """
         pass
     
+    @api.private
     @abstractmethod
-    def delete_backup(self, remote_filename):
+    def delete_backup(self, remote_filename, backup_info=None):
         """
         Delete a backup file from the storage provider.
         
@@ -175,6 +182,7 @@ class BackupProviderAbstract(models.AbstractModel):
         """
         pass
     
+    @api.private
     @abstractmethod
     def get_storage_info(self):
         """

@@ -7,6 +7,7 @@ import logging
 
 from odoo import models, fields, api
 from odoo.exceptions import UserError, ValidationError
+from .backup_utils import require_backup_admin, validate_filename
 
 _logger = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ try:
 except ImportError:
     asyncssh = None
     _logger.warning(
-        "AsyncSSH library not found. Please install it with: pip install asyncssh"
+        'AsyncSSH library not found. Please install it with: pip install "asyncssh<2.24"'
     )
 
 
@@ -55,6 +56,7 @@ class BackupProviderSftp(models.Model):
     )
     password = fields.Char(
         string='Password',
+        groups='database_ultimate_backup_lite.group_backup_admin',
         help='Password for authentication (leave empty to use key-based auth)'
     )
     remote_directory = fields.Char(
@@ -119,10 +121,11 @@ class BackupProviderSftp(models.Model):
     # Override abstract methods
     def test_connection(self):
         """Test SFTP connection and permissions."""
+        require_backup_admin(self)
         self.ensure_one()
 
         if not asyncssh:
-            error_msg = "AsyncSSH library not available. Please install it with: pip install asyncssh"
+            error_msg = 'AsyncSSH library not available. Please install it with: pip install "asyncssh<2.24"'
             return {
                 'success': False,
                 'message': error_msg
@@ -227,7 +230,9 @@ class BackupProviderSftp(models.Model):
 
     def upload_backup(self, backup_file_path, remote_filename):
         """Upload backup file via SFTP."""
+        require_backup_admin(self)
         self.ensure_one()
+        validate_filename(remote_filename)
 
         if not asyncssh:
             return {
@@ -236,7 +241,9 @@ class BackupProviderSftp(models.Model):
             }
 
         try:
-            result = asyncio.run(self._async_upload_backup(backup_file_path, remote_filename))
+            result = asyncio.run(asyncio.wait_for(
+                self._async_upload_backup(backup_file_path, remote_filename),
+                timeout=self.transfer_timeout or None))
             return result
         except Exception as e:
             return {
@@ -298,7 +305,9 @@ class BackupProviderSftp(models.Model):
 
     def download_backup(self, remote_filename, local_path):
         """Download backup file via SFTP."""
+        require_backup_admin(self)
         self.ensure_one()
+        validate_filename(remote_filename)
 
         if not asyncssh:
             return {
@@ -307,7 +316,9 @@ class BackupProviderSftp(models.Model):
             }
 
         try:
-            result = asyncio.run(self._async_download_backup(remote_filename, local_path))
+            result = asyncio.run(asyncio.wait_for(
+                self._async_download_backup(remote_filename, local_path),
+                timeout=self.transfer_timeout or None))
             return result
         except Exception as e:
             return {
@@ -352,6 +363,7 @@ class BackupProviderSftp(models.Model):
 
     def list_backups(self, prefix=None):
         """List backup files on SFTP server."""
+        require_backup_admin(self)
         self.ensure_one()
 
         if not asyncssh:
@@ -399,7 +411,7 @@ class BackupProviderSftp(models.Model):
                                 'remote_path': file_path,
                                 'size_bytes': file_attr.size,
                                 'size_gb': file_attr.size / (1024**3),
-                                'modified_date': datetime.datetime.fromtimestamp(file_attr.mtime),
+                                'modified_date': datetime.datetime.fromtimestamp(file_attr.mtime, datetime.timezone.utc).replace(tzinfo=None),
                                 'permissions': oct(file_attr.permissions) if file_attr.permissions else None
                             })
                         except Exception as e:
@@ -410,9 +422,11 @@ class BackupProviderSftp(models.Model):
 
                 return backups
 
-    def delete_backup(self, remote_filename):
+    def delete_backup(self, remote_filename, backup_info=None):
         """Delete backup file from SFTP server."""
+        require_backup_admin(self)
         self.ensure_one()
+        validate_filename(remote_filename)
 
         if not asyncssh:
             return {
@@ -456,6 +470,7 @@ class BackupProviderSftp(models.Model):
 
     def get_storage_info(self):
         """Get SFTP storage information."""
+        require_backup_admin(self)
         self.ensure_one()
 
         if not asyncssh:
@@ -513,6 +528,7 @@ class BackupProviderSftp(models.Model):
 
     def action_reset_host_key(self):
         """Forget the pinned host key (e.g. after a legitimate server migration)."""
+        require_backup_admin(self)
         self.ensure_one()
         self.write({
             'server_host_key': False,
@@ -605,6 +621,8 @@ class BackupProviderSftp(models.Model):
                 "Otherwise, this connection may be intercepted by an attacker."
                 % (self.hostname, self.port, self.host_key_fingerprint or 'unknown')
             )
+        if isinstance(error, (asyncio.TimeoutError, TimeoutError)):
+            return "The SFTP operation exceeded its configured timeout."
         return str(error)
 
     def _is_backup_file(self, filename):
