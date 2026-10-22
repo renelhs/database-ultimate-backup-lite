@@ -5,6 +5,35 @@ All notable changes to the Database Ultimate Backup Lite module will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [19.0.1.6.1] - 2026-10-22
+
+### Added
+
+- Ship `requirements.txt` inside the module folder, so the store download
+  includes the Python dependencies. The repository-root file now includes it
+  with `-r`. It adds `packaging`, which Odoo 19 needs to check versioned
+  `external_dependencies`.
+- Document installing the requirements on self-hosted servers and on Odoo.sh
+  (which only reads requirements files in the folder that contains the module),
+  and the recommended `odoo.conf` memory and time limits for large databases,
+  on the app page and in the README.
+
+### Changed
+
+- Declare the minimum AsyncSSH version in `external_dependencies`
+  (`asyncssh>=2.21.0`): Odoo now refuses to install or upgrade the module
+  (including `-u all`) while it is missing or older. The `<2.24` upper bound
+  stays in `requirements.txt` only.
+- Correct the store page footer version.
+
+### Upgrade notes
+
+- Install the updated `requirements.txt` (including `packaging`) before
+  upgrading the module; otherwise Odoo blocks the upgrade with a message naming
+  the missing library.
+
+---
+
 ## [19.0.1.6.0] - 2026-10-05
 
 ### Added

@@ -1,0 +1,4 @@
+asyncssh>=2.21.0,<2.24
+# Odoo 19 needs packaging to check the versions in __manifest__.py
+# external_dependencies, and does not install it itself.
+packaging==26.2

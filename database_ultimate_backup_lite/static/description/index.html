@@ -537,8 +537,17 @@
                                     </h2>
 
                                     <div class="mb-4" style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; border-radius: 4px;">
-                                        <strong>Get started in 4 easy steps! Install <code>asyncssh</code> for SFTP support: <code>pip install &quot;asyncssh&lt;2.24&quot;</code></strong>
+                                        <strong>Get started in 4 easy steps!</strong>
                                     </div>
+
+                                    <h3 style="color: #667eea; margin-top: 30px;">Before You Install: Python Dependencies</h3>
+                                    <p style="color: #64728f;">
+                                        The module needs AsyncSSH for SFTP, and Odoo will not install it until it is present. The list ships inside the module as <code>database_ultimate_backup_lite/requirements.txt</code>. Install it with the same Python (or virtual environment) that runs Odoo, then restart Odoo:
+                                    </p>
+                                    <pre style="background-color: #f6f8fa; color: #293445; padding: 12px 15px; border-radius: 4px; white-space: pre-wrap;"><code>pip install -r /path/to/your/addons/database_ultimate_backup_lite/requirements.txt</code></pre>
+                                    <p style="color: #64728f;">
+                                        <strong>Odoo.sh:</strong> Odoo.sh does not read requirements files inside module folders. Copy the lines of that file into the <code>requirements.txt</code> of the folder that contains the module (usually the root of your repository).
+                                    </p>
 
                                     <h3 style="color: #667eea; margin-top: 30px;">1. Configure a Storage Provider</h3>
                                     <p style="color: #64728f;">
@@ -591,6 +600,20 @@
                                         <li>Adjust the schedule to your preference and activate the scheduler</li>
                                     </ul>
 
+                                    <h3 style="color: #667eea; margin-top: 30px;">Large Databases: Odoo Server Limits</h3>
+                                    <p style="color: #64728f;">
+                                        On self-hosted servers, backups (including <strong>Create Backup Now</strong>) run in Odoo's cron worker, so the worker limits in <code>odoo.conf</code> apply to the whole dump and upload. For large databases, start from these values (sized for a 20-50 GB backup) and restart Odoo:
+                                    </p>
+                                    <pre style="background-color: #f6f8fa; color: #293445; padding: 12px 15px; border-radius: 4px; white-space: pre-wrap;"><code>limit_memory_soft = 2147483648
+limit_memory_hard = 2684354560
+limit_time_cpu = 5400
+limit_time_real_cron = 10800</code></pre>
+                                    <ul style="color: #64728f;">
+                                        <li><strong>Time:</strong> <code>limit_time_real_cron</code> caps the total backup time. When it is not set, Odoo uses <code>limit_time_real</code> (120 seconds by default), which is far too short for large backups. Aim for 2-3 times the duration your backup jobs actually take.</li>
+                                        <li><strong>Memory:</strong> keep both memory limits at least at Odoo's defaults (2 GB soft, 2.5 GB hard). They limit virtual memory per worker, not physical RAM; lower values can make backups fail with "Cannot allocate memory".</li>
+                                        <li><strong>Comments:</strong> write each comment on its own line; <code>odoo.conf</code> does not accept comments after a value.</li>
+                                    </ul>
+
                                     <h3 style="color: #667eea; margin-top: 30px;">Technical Specifications</h3>
                                     <div class="row mt-3">
                                         <div class="col-md-6">
@@ -598,7 +621,7 @@
                                             <ul style="color: #64728f;">
                                                 <li><strong>Odoo Version:</strong> 19.0 (Community or Enterprise)</li>
                                                 <li><strong>Python Version:</strong> 3.10+</li>
-                                                <li><strong>Dependencies:</strong> <code>asyncssh</code> (for SFTP support)</li>
+                                                <li><strong>Dependencies:</strong> <code>asyncssh</code> (for SFTP support) and <code>packaging</code> (versions in <code>requirements.txt</code>)</li>
                                             </ul>
                                         </div>
                                         <div class="col-md-6">
@@ -619,11 +642,44 @@
                              class="tab-pane fade show" id="releases"
                              role="tabpanel">
 
+                            <!-- Version 19.0.1.6.1 -->
+                            <div class="row pt-5 m-0">
+                                <div class="col-md-3">
+                                    <h4 style="font-size:16px; font-weight:600; color:#514F4F; margin:0; line-height:26px;">
+                                        Latest Release 19.0.1.6.1
+                                    </h4>
+                                    <span style="font-size:14px; color:#7A7979; display:block; margin-bottom:20px;">
+                                        October 22, 2026
+                                    </span>
+                                </div>
+                                <div class="col-md-8">
+                                    <div style="padding:0 0 40px">
+                                        <div style="margin:0 0 10px">
+                                            <div style="display:inline-block; padding:4px 12px; color:#fff; background-color:#28a745; border-radius:20px; margin-right: 8px;">
+                                                Added
+                                            </div>
+                                            <div style="display:inline-block; padding:4px 12px; color:#fff; background-color:#17a2b8; border-radius:20px; margin-right: 8px;">
+                                                Improved
+                                            </div>
+                                        </div>
+                                        <div class="d-flex m-0" style="color:#7A7979;">
+                                            <ul class="pl-3 mb-0">
+                                                <li><strong>Python requirements included with the module</strong> - the download now contains <code>requirements.txt</code>, and the Configuration tab explains how to install it on your own server or on Odoo.sh.</li>
+                                                <li><strong>Recommended server limits for large databases</strong> - the Configuration tab now lists the <code>odoo.conf</code> memory and time limits that large backups need.</li>
+                                                <li><strong>AsyncSSH version checked on install and upgrade</strong> - Odoo now refuses to install or upgrade the module while AsyncSSH is missing or too old, instead of failing later during an SFTP backup.</li>
+                                                <li><strong>Upgrade note</strong> - before upgrading, install the updated <code>requirements.txt</code>, which now includes <code>packaging</code>.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div style="padding:0 0 0; border-bottom:1px solid #E3E3E3"></div>
+                                </div>
+                            </div>
+
                             <!-- Version 19.0.1.6.0 -->
                             <div class="row pt-5 m-0">
                                 <div class="col-md-3">
                                     <h4 style="font-size:16px; font-weight:600; color:#514F4F; margin:0; line-height:26px;">
-                                        Latest Release 19.0.1.6.0
+                                        Version 19.0.1.6.0
                                     </h4>
                                     <span style="font-size:14px; color:#7A7979; display:block; margin-bottom:20px;">
                                         October 5, 2026
@@ -1027,7 +1083,7 @@
 
 <div class="footer" style="text-align: center; padding: 40px 20px; color: #777; font-size: 0.9em; background-color: #f9f9f9; margin-top: 40px;">
     <p style="margin: 5px 0;"><strong>Database Ultimate Backup Lite for Odoo 19.0</strong></p>
-    <p style="margin: 5px 0;">Version 1.5.0 | Licensed under MIT | Free</p>
+    <p style="margin: 5px 0;">Version 1.6.1 | Licensed under MIT | Free</p>
     <p style="margin: 5px 0;">Developed by René Hechavarría</p>
     <p style="margin-top: 15px; font-style: italic;">
         Free local &amp; SFTP backup solution with automated scheduling,
