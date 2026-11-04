@@ -176,7 +176,7 @@ class TestBackupHardening(TransactionCase):
         self._record_upload(self.config, legacy_path.name, legacy_path)
         owned = self.config._get_owned_backups(self.provider)
         self.assertEqual(len(owned), 1)
-        self.assertEqual(owned[0]['full_path'], str(self.storage / 'legacy.zip'))
+        self.assertEqual(owned[0]['full_path'], str((self.storage / 'legacy.zip').resolve()))
 
     def test_legacy_collision_with_another_provider_record_is_preserved(self):
         location = self.storage / 'legacy.zip'
