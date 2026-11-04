@@ -1,5 +1,12 @@
 # Changelog
 
+## [20.0.1.1.2] - 2026-11-04
+
+### Changed
+
+- **Link to the Full edition in the configuration**: the Storage Providers section of a backup configuration shows an information box pointing to Database Ultimate Backup on Odoo Apps for Amazon S3, Google Drive, Azure, Odoo.sh or encryption. The note under the providers now only states what the Lite supports.
+- **Store title**: the app is listed as "Database Ultimate Backup Lite: Free Auto Backup to Local & SFTP", and the summary names the destinations and email alerts.
+
 ## [20.0.1.1.1] - 2026-10-22
 
 ### Added
