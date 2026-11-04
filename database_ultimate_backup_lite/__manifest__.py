@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "Database Ultimate Backup Lite",
+    'name': "Database Ultimate Backup Lite: Free Auto Backup to Local & SFTP",
 
-    'summary': "Free automated database backups with Local + SFTP storage, retention policies, integrity verification, and monitoring",
+    'summary': "Free automatic database backups to local disk and SFTP, with scheduling, retention, integrity checks and email alerts. Need Amazon S3, Google Drive, Azure, Odoo.sh or encryption? Upgrade to Database Ultimate Backup.",
 
     'description': """
         Database Ultimate Backup Lite - Free Backup Solution with Local & SFTP
