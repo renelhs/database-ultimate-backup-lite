@@ -5,6 +5,19 @@ All notable changes to the Database Ultimate Backup Lite module will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [19.0.1.6.2] - 2026-11-04
+
+### Changed
+
+- The Storage Providers section of a backup configuration shows an
+  information box pointing to Database Ultimate Backup on Odoo Apps for
+  Amazon S3, Google Drive, Azure, Odoo.sh or encryption. The note under the
+  providers now only states what the Lite supports.
+- The app is listed as "Database Ultimate Backup Lite: Free Auto Backup to
+  Local & SFTP", and the summary names the destinations and email alerts.
+
+---
+
 ## [19.0.1.6.1] - 2026-10-22
 
 ### Added
