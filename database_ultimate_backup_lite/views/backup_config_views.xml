@@ -66,7 +66,7 @@
                                 </group>
                             </group>
                             <div class="alert alert-info mt-2 mb-0" role="status">
-                                Need Amazon S3, Google Drive, Azure, Odoo.sh or encryption? They are available in
+                                Need Amazon S3, Google Drive, Dropbox, OneDrive, Azure, Odoo.sh or encryption? They are available in
                                 <a href="https://apps.odoo.com/apps/modules/19.0/database_ultimate_backup" target="_blank" rel="noopener">Database Ultimate Backup</a>.
                             </div>
                             <div class="alert alert-warning mt-2" role="alert"

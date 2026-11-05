@@ -245,6 +245,9 @@ limit_memory_hard = 2684354560
 Upgrade to **Database Ultimate Backup** (Full Edition) for enterprise-grade multi-cloud support:
 
 - **AWS S3** - Storage classes, encryption, versioning
+- **Google Drive** - My Drive with OAuth, or a Shared Drive with a service account
+- **Dropbox** - Uploads in parts, each backup checked against Dropbox's content hash
+- **Microsoft OneDrive** - Personal and work or school accounts
 - **Azure Blob Storage** - Storage tiers, geo-redundancy
 - **Google Cloud Storage** - Flexible classes, KMS encryption
 - **DigitalOcean Spaces** - Cost-effective cloud storage
