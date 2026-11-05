@@ -1,5 +1,11 @@
 # Changelog
 
+## [20.0.1.1.3] - 2026-11-05
+
+### Changed
+
+- **Dropbox and Microsoft OneDrive named in the Full edition links**: the information box in the Storage Providers section, the store summary, the edition comparison on the app page and the README now list Dropbox and OneDrive among the destinations of Database Ultimate Backup, which added them in 20.0.1.3.0.
+
 ## [20.0.1.1.2] - 2026-11-04
 
 ### Changed
