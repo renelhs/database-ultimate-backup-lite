@@ -2,7 +2,7 @@
 {
     'name': "Database Ultimate Backup Lite: Free Auto Backup to Local & SFTP",
 
-    'summary': "Free automatic database backups to local disk and SFTP, with scheduling, retention, integrity checks and email alerts. Need Amazon S3, Google Drive, Dropbox, OneDrive, Azure, Odoo.sh or encryption? Upgrade to Database Ultimate Backup.",
+    'summary': "Free backup for Odoo: automatic database backup with local backup and SFTP backup, scheduling, retention of old backups, integrity checks and email alerts. Need Amazon S3, Google Drive, Dropbox, OneDrive, Azure, Odoo.sh or encryption? Upgrade to Database Ultimate Backup.",
 
     'description': """
         Database Ultimate Backup Lite - Free Backup Solution with Local & SFTP
