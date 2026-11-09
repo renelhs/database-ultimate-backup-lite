@@ -258,7 +258,8 @@ class TestBackup(TransactionCase):
              patch.object(type(self.sftp), 'upload_backup', return_value={'success': False, 'message': 'offline'}), \
              patch.object(type(self.config), '_send_notification') as notify:
             action = self.config.create_backup()
-            with patch.object(type(self.env['backup.job']), '_commit_queue_progress', return_value=0):
+            with patch.object(type(self.env['backup.job']), '_commit_attempt'), \
+                 patch.object(type(self.env['backup.job']), '_commit_queue_progress', return_value=0):
                 self.env['backup.job'].run_pending_backups()
         job = self.env['backup.job'].browse(action['res_id'])
         self.assertEqual(job.status, 'warning')
@@ -281,7 +282,8 @@ class TestBackup(TransactionCase):
             self.assertEqual(len(queued), 1)
             self.assertFalse(queued.include_filestore)
             cleanup.assert_not_called()
-            with patch.object(type(self.env['backup.job']), '_commit_queue_progress', return_value=0):
+            with patch.object(type(self.env['backup.job']), '_commit_attempt'), \
+                 patch.object(type(self.env['backup.job']), '_commit_queue_progress', return_value=0):
                 self.env['backup.job'].run_pending_backups()
         created = self.config.backup_job_ids.sorted('id')[-1]
         self.assertFalse(created.is_manual)

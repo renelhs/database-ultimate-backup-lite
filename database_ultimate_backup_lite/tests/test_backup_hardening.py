@@ -222,6 +222,7 @@ class TestBackupHardening(TransactionCase):
             job.env.cr.execute('SELECT 1 / 0')
 
         with patch.object(type(queued), '_process_backup', fail_with_database_error), \
+                patch.object(type(queued), '_commit_attempt'), \
                 patch.object(type(queued), '_commit_queue_progress', return_value=0):
             self.env['backup.job'].run_pending_backups()
         self.assertEqual(queued.status, 'error')
@@ -263,6 +264,7 @@ class TestBackupHardening(TransactionCase):
         queued = self.env['backup.job'].browse(action['res_id'])
         with patch.object(type(queued), '_create_backup_file', side_effect=UserError('Source unavailable')), \
                 patch.object(type(queued), '_cleanup_stale_temp_files'), \
+                patch.object(type(queued), '_commit_attempt'), \
                 patch.object(type(queued), '_commit_queue_progress', return_value=0):
             self.env['backup.job'].run_pending_backups()
         self.assertEqual(queued.status, 'error')

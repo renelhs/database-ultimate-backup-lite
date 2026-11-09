@@ -5,6 +5,58 @@ All notable changes to the Database Ultimate Backup Lite module will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.0.1.3.3] - 2026-11-09
+
+### Fixed
+
+- **Temporary files of interrupted backups are freed before the next
+  backup**: when a scheduled action passes its time limit in threaded mode
+  (`workers = 0`), Odoo reloads itself with `execv` and keeps its PID (PID
+  1 in a container). The stale sweep only compared PIDs, so it took the
+  leftover of the stopped backup, often several GB in `/tmp`, for a running
+  backup and kept it for up to 24 hours; each retry added another copy
+  until the disk was full ("No space left on device"). Temporary folders
+  now also record a token drawn when Odoo starts (and again in each prefork
+  worker), the host and PID namespace, and the process start time. The
+  sweep removes the folder of a stopped, reloaded or reused-PID process at
+  once, and never removes the folder of a running backup, however long it
+  runs. Folders from another host or container sharing the temporary
+  directory are only removed after 24 hours.
+- **Backups whose Odoo process stops are no longer started every minute
+  forever**: a stop (time limit, memory limit, restart) left no error
+  behind, so the job went back to the queue and ran again a minute later,
+  reloading Odoo each time without any notification. Each attempt is now
+  saved before the backup starts. A stopped backup is started once more;
+  after two stopped attempts it is marked as failed and the failure
+  notification is sent, naming the time limit Odoo applies
+  (`limit_time_real_cron`, or `limit_time_real` when it does not apply) and
+  how to raise it. Backups that fail with an error, such as a full disk,
+  are still not retried.
+
+### Changed
+
+- **Running backups show as Running**: the status is saved when a backup
+  starts. The job form shows a notice while it runs and the number of
+  attempts after a retry.
+
+### Upgrade notes
+
+- No new Python dependency. Upgrade the module to add the attempt counter
+  to backup jobs.
+- Folders left by earlier versions only record a PID: they are removed
+  after 2 hours, or 24 hours while that PID belongs to another running
+  process. To reclaim the space at once, delete `/tmp/odoo_backup_*` while
+  no backup is running.
+- A backup that takes longer than Odoo's limit for scheduled actions is
+  stopped twice and then reported. Set `limit_time_real_cron` in
+  `odoo.conf` well above the time your backups take (see "Odoo
+  Configuration for Large Databases" in the README).
+- `limit_time_real_cron = 0` on Odoo 18 in threaded mode (`workers = 0`)
+  does not remove the limit: Odoo 18 then applies `limit_time_real` (120
+  seconds by default). Use a positive value instead.
+
+---
+
 ## [18.0.1.3.2] - 2026-11-05
 
 ### Changed
