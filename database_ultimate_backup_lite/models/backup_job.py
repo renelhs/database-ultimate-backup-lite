@@ -14,12 +14,17 @@ import shutil
 import zipfile
 import logging
 
+import psutil
+import psycopg2.errors
+
 import odoo.release
 import odoo.modules.db
 import odoo.sql_db
 from odoo import models, fields, api, tools
 from odoo.exceptions import UserError
-from .backup_utils import require_backup_admin, validate_filename
+from .backup_utils import (
+    cron_time_limit, process_origin, process_token, require_backup_admin, validate_filename,
+)
 from odoo.tools.misc import exec_pg_environ, find_pg_tool
 
 _logger = logging.getLogger(__name__)
@@ -58,6 +63,14 @@ class BackupJob(models.Model):
         default=True,
         readonly=True,
         help='Whether this ZIP backup includes attachments from the filestore.'
+    )
+    attempt_count = fields.Integer(
+        string='Attempts',
+        default=0,
+        readonly=True,
+        help='How many times the backup queue started this job. A backup whose Odoo process '
+             'stops in the middle (time limit, memory limit, restart) is started once more, '
+             'then marked as failed.',
     )
     is_manual = fields.Boolean(
         string='Manual Backup',
@@ -200,9 +213,9 @@ class BackupJob(models.Model):
     # safety sweep keys off these to avoid touching anything else.
     _TEMP_DIR_PREFIXES = ('odoo_backup_', 'odoo_backup_dump_')
 
-    # Marker file written inside every temp dir with the creating process
-    # PID, so the stale sweep can tell an in-progress backup (owner process
-    # alive) from the leftover of a killed worker (owner process gone).
+    # Marker file written inside every temp dir, naming the process that
+    # created it, so the stale sweep can tell an in-progress backup (owner
+    # still running) from the leftover of a killed or reloaded Odoo process.
     _TEMP_OWNER_MARKER = '.odoo_backup_owner'
 
     @api.model_create_multi
@@ -226,9 +239,10 @@ class BackupJob(models.Model):
         self.ensure_one()
 
         # Safety net: remove leftover temp dirs from previous runs that were
-        # killed (SIGKILL/OOM/restart) before their own finally could run.
-        # Runs before we allocate this run's temp dir so a wedged /tmp from
-        # an earlier failure gets a chance to free space.
+        # killed (SIGKILL/OOM/restart, or an Odoo reload after a cron time
+        # limit) before their own finally could run. Runs before we allocate
+        # this run's temp dir, so a retry of an interrupted backup reclaims
+        # the space that run used instead of needing twice as much.
         self._cleanup_stale_temp_files()
 
         require_backup_admin(self)
@@ -774,15 +788,22 @@ class BackupJob(models.Model):
 
     @classmethod
     def _mark_temp_dir_owner(cls, path):
-        """Write the creating process PID into the temp dir (owner marker).
+        """Record in the temp dir which process created it (owner marker).
 
-        The stale sweep uses this to protect backups that are legitimately
-        still running — however long they take — while still reclaiming
-        dirs whose owner process is gone (SIGKILL, OOM, restart).
+        The stale sweep uses it to keep the dirs of backups that are still
+        running, however long they take, and to reclaim at once those of a
+        process that is gone: killed (SIGKILL, OOM), restarted, or re-executed
+        by an Odoo reload with the same PID, which the process token reveals.
         """
+        pid = os.getpid()
+        owner = {'pid': pid, 'token': process_token(), 'origin': process_origin()}
         try:
-            with open(os.path.join(path, cls._TEMP_OWNER_MARKER), 'w') as fh:
-                fh.write(str(os.getpid()))
+            owner['started'] = psutil.Process(pid).create_time()
+        except psutil.Error:
+            pass  # the sweep then cannot rule out a reused PID, and waits longer
+        try:
+            with open(os.path.join(path, cls._TEMP_OWNER_MARKER), 'w', encoding='utf-8') as fh:
+                json.dump(owner, fh)
         except OSError as e:
             # Never fail a backup over the marker; the sweep falls back to
             # age-based cleanup for dirs without one.
@@ -802,16 +823,53 @@ class BackupJob(models.Model):
         return True
 
     @classmethod
-    def _temp_dir_owner_alive(cls, path):
-        """Return True if the temp dir's owner marker names a live process."""
+    def _temp_dir_owner_state(cls, path):
+        """Tell whether the backup that created this temp path may still be running.
+
+        Returns:
+        - ``'alive'``: its process is running (another thread of this one, or
+          another worker on this host);
+        - ``'dead'``: its process is gone, its PID now belongs to a later
+          process, or it is this PID before an Odoo reload (other token);
+        - ``'unverified'``: the owner cannot be checked from here: another
+          host or container sharing the temp dir, or a PID-only marker from
+          an earlier version that names a running process;
+        - ``'unknown'``: no readable marker (a plain file, a dir whose marker
+          is not written yet, or the leftover of a pre-marker version).
+        """
         try:
-            with open(os.path.join(path, cls._TEMP_OWNER_MARKER)) as fh:
-                pid = int(fh.read().strip())
+            with open(os.path.join(path, cls._TEMP_OWNER_MARKER), encoding='utf-8') as fh:
+                owner = json.loads(fh.read())
         except (OSError, ValueError):
-            # No/unreadable marker (e.g. dir created by a pre-marker version
-            # of this module): fall back to pure age-based cleanup.
-            return False
-        return cls._pid_is_alive(pid)
+            return 'unknown'
+        if type(owner) is int:
+            # PID-only marker of an earlier version. Backups of this process
+            # write a token, so one naming this PID is from a previous run.
+            if owner <= 0 or owner == os.getpid() or not cls._pid_is_alive(owner):
+                return 'unknown'
+            return 'unverified'
+        if not isinstance(owner, dict):
+            return 'unknown'
+        pid, started = owner.get('pid'), owner.get('started')
+        if type(pid) is not int or pid <= 0:
+            return 'unknown'
+        if owner.get('origin') != process_origin():
+            return 'unverified'  # its PIDs mean nothing in this namespace
+        if pid == os.getpid():
+            return 'alive' if owner.get('token') == process_token() else 'dead'
+        try:
+            process = psutil.Process(pid)
+            if process.status() == psutil.STATUS_ZOMBIE:
+                return 'dead'
+            current = process.create_time()
+        except psutil.NoSuchProcess:
+            return 'dead'
+        except psutil.Error:
+            return 'unverified'
+        if not isinstance(started, (int, float)):
+            return 'unverified'
+        # Another start time means the PID was reused by a later process.
+        return 'alive' if abs(current - started) < 1 else 'dead'
 
     @classmethod
     def _cleanup_stale_temp_files(cls, max_age_seconds=2 * 3600,
@@ -820,46 +878,48 @@ class BackupJob(models.Model):
         the ones that no longer belong to a running backup.
 
         This is the safety net for cases the per-run try/finally can't cover:
-        the worker getting SIGKILL'd by the OOM killer, an Odoo restart in
-        the middle of a long filestore copy, or shutil.rmtree silently
-        failing under disk pressure with ignore_errors=True.
+        the worker getting SIGKILL'd by the OOM killer, Odoo reloading itself
+        when a cron thread passes its time limit (same PID, new process
+        token), an Odoo restart in the middle of a long filestore copy, or
+        shutil.rmtree silently failing under disk pressure with
+        ignore_errors=True.
 
-        A dir is removed only when ALL of these hold:
-        - it is older than ``max_age_seconds``, and
-        - its owner marker (the PID of the process that created it) does not
-          name a live process — so a backup that legitimately runs for many
-          hours is never swept out from under the worker writing to it, and
-        - or, regardless of the owner, it is older than
-          ``hard_max_age_seconds`` (caps leakage if a recycled PID happens to
-          match an unrelated live process).
+        Each path is handled by the state of its owner (``_temp_dir_owner_state``):
+        - ``alive``: kept, however long the backup takes;
+        - ``dead``: removed at once, so a retried backup finds the space its
+          interrupted run used;
+        - ``unverified``: removed once older than ``hard_max_age_seconds``;
+        - ``unknown``: removed once older than ``max_age_seconds``.
         """
         tmp_root = tempfile.gettempdir()
         now = time.time()
-        cutoff = now - max_age_seconds
-        hard_cutoff = now - hard_max_age_seconds
+        # 'odoo_backup_*' also matches 'odoo_backup_dump_*': visit each path once.
+        paths = {
+            path for prefix in cls._TEMP_DIR_PREFIXES
+            for path in glob.glob(os.path.join(tmp_root, prefix + '*'))
+        }
         removed = []
-        for prefix in cls._TEMP_DIR_PREFIXES:
-            for path in glob.glob(os.path.join(tmp_root, prefix + '*')):
-                try:
-                    mtime = os.path.getmtime(path)
-                    if mtime >= cutoff:
-                        continue  # recent — likely an in-progress backup
-                    if (
-                        os.path.isdir(path)
-                        and mtime >= hard_cutoff
-                        and cls._temp_dir_owner_alive(path)
-                    ):
-                        continue  # long-running backup still owned by a live process
-                    if os.path.isdir(path):
-                        shutil.rmtree(path, ignore_errors=True)
-                    else:
-                        os.unlink(path)
-                    if not os.path.exists(path):
-                        removed.append(path)
-                except Exception as e:
-                    _logger.warning(
-                        "Could not remove stale backup temp path %s: %s", path, e,
-                    )
+        for path in sorted(paths):
+            try:
+                state = cls._temp_dir_owner_state(path)
+                if state == 'alive':
+                    continue
+                if state != 'dead':
+                    max_age = hard_max_age_seconds if state == 'unverified' else max_age_seconds
+                    if now - os.path.getmtime(path) < max_age:
+                        continue
+                if os.path.isdir(path):
+                    shutil.rmtree(path, ignore_errors=True)
+                else:
+                    os.unlink(path)
+                if not os.path.exists(path):
+                    removed.append(path)
+            except FileNotFoundError:
+                continue  # removed meanwhile by its owner or another sweep
+            except Exception as e:
+                _logger.warning(
+                    "Could not remove stale backup temp path %s: %s", path, e,
+                )
         if removed:
             _logger.info(
                 "Backup temp sweep removed %d stale path(s): %s",
@@ -900,28 +960,59 @@ class BackupJob(models.Model):
         }
 
 
+    # A backup whose Odoo process stops mid-run (time limit, memory limit,
+    # restart) leaves no error behind: it is started again until it has been
+    # started this many times, then marked as failed. Backups that fail with
+    # an error (disk full, credentials...) are never started again.
+    _MAX_ATTEMPTS = 2
+
+    # A running job is taken over only when no runner holds its row lock and
+    # its attempt started at least this long ago. The delay covers the instant
+    # between the commit that records an attempt and the lock taken after it.
+    _ORPHAN_GRACE_SECONDS = 300
+
     @api.model
     @api.private
     def run_pending_backups(self):
         """Process committed queue entries in bounded cron batches.
 
-        A row lock prevents duplicate execution. If a worker dies before commit,
-        the durable pending entry remains available for the next cron attempt.
+        Each attempt is committed as 'running' before any heavy work, and the
+        runner then holds the job's row lock until it finishes. If the Odoo
+        process dies, PostgreSQL releases the lock: the job is still
+        'running' but unlocked, so the next run of the queue starts it again,
+        or marks it as failed after ``_MAX_ATTEMPTS`` attempts. The row lock
+        prevents duplicate execution.
         """
         require_backup_admin(self)
         for _index in range(10):
             self.flush_model()
             self.env.cr.execute("""
-                SELECT id FROM backup_job WHERE status = 'pending'
+                SELECT id, status, now() AT TIME ZONE 'UTC' FROM backup_job
+                WHERE status = 'pending'
+                   OR (status = 'running'
+                       AND start_time < now() AT TIME ZONE 'UTC' - make_interval(secs => %s))
                 ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1
-            """)
+            """, [self._ORPHAN_GRACE_SECONDS])
             row = self.env.cr.fetchone()
             if not row:
                 break
-            job = self.browse(row[0])
-            if not job.config_id.active or not job.config_id.all_providers:
+            job_id, previous_status, now = row
+            job = self.browse(job_id)
+            if previous_status == 'running':
+                _logger.warning("Backup job %s: the Odoo process stopped during attempt %s",
+                                job.id, job.attempt_count)
+                job._log(f"Attempt {job.attempt_count} did not finish: the Odoo process stopped "
+                         f"during the backup.")
+            if previous_status == 'running' and job.attempt_count >= self._MAX_ATTEMPTS:
+                message = job._stopped_process_message()
+                job.write({'status': 'error', 'error_message': message, 'end_time': fields.Datetime.now()})
+                self._cleanup_stale_temp_files()  # free what the stopped attempts left in /tmp
+                result = {'success': False, 'message': message, 'backup_job': job}
+            elif not job.config_id.active or not job.config_id.all_providers:
                 result = {'success': False, 'message': 'Configuration or destinations are inactive.', 'backup_job': job}
                 job.write({'status': 'error', 'error_message': result['message'], 'end_time': fields.Datetime.now()})
+            elif not job._start_attempt(now):
+                continue  # another runner took the job over
             else:
                 try:
                     with self.env.cr.savepoint():
@@ -934,3 +1025,40 @@ class BackupJob(models.Model):
             remaining = self.search_count([('status', '=', 'pending')])
             if not self.env['ir.cron']._commit_progress(1, remaining=remaining):
                 break
+
+    def _start_attempt(self, started):
+        """Commit a new attempt of this job, then lock its row again.
+
+        ``started`` is the database clock, which the takeover delay of
+        ``run_pending_backups`` is measured against. Returns False when the
+        job could not be locked again because another runner took it over.
+        """
+        self.ensure_one()
+        attempt = self.attempt_count + 1
+        self.write({'status': 'running', 'attempt_count': attempt, 'start_time': started, 'end_time': False})
+        self._log(f"Attempt {attempt} of {self._MAX_ATTEMPTS} started")
+        self.env['ir.cron']._commit_progress()
+        try:
+            with self.env.cr.savepoint():
+                self.env.cr.execute("""
+                    SELECT id FROM backup_job
+                    WHERE id = %s AND status = 'running' AND attempt_count = %s
+                    FOR UPDATE NOWAIT
+                """, [self.id, attempt])
+                return bool(self.env.cr.fetchone())
+        except psycopg2.errors.LockNotAvailable:
+            return False
+
+    def _stopped_process_message(self):
+        limit, setting = cron_time_limit()
+        if limit:
+            cause = (f"Odoo stops scheduled actions that run longer than {limit} seconds ({setting}): "
+                     f"set limit_time_real_cron in odoo.conf well above the time a backup takes. "
+                     f"A memory limit (limit_memory_soft, limit_memory_hard) or a server restart "
+                     f"has the same effect.")
+        else:
+            cause = ("No time limit applies to scheduled actions, so look in the server log for a "
+                     "memory limit (limit_memory_soft, limit_memory_hard) or a restart at the time "
+                     "of each attempt.")
+        return (f"The Odoo process stopped in the middle of this backup on each of its "
+                f"{self.attempt_count} attempts, so it was not started again. {cause}")

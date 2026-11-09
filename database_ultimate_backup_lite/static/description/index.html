@@ -642,11 +642,43 @@ limit_time_real_cron = 10800</code></pre>
                              class="tab-pane fade show" id="releases"
                              role="tabpanel">
 
+                            <!-- Version 20.0.1.1.4 -->
+                            <div class="row pt-5 m-0">
+                                <div class="col-md-3">
+                                    <h4 style="font-size:16px; font-weight:600; color:#514F4F; margin:0; line-height:26px;">
+                                        Latest Release 20.0.1.1.4
+                                    </h4>
+                                    <span style="font-size:14px; color:#7A7979; display:block; margin-bottom:20px;">
+                                        November 9, 2026
+                                    </span>
+                                </div>
+                                <div class="col-md-8">
+                                    <div style="padding:0 0 40px">
+                                        <div style="margin:0 0 10px">
+                                            <div style="display:inline-block; padding:4px 12px; color:#fff; background-color:#dc3545; border-radius:20px; margin-right: 8px;">
+                                                Fixed
+                                            </div>
+                                            <div style="display:inline-block; padding:4px 12px; color:#fff; background-color:#17a2b8; border-radius:20px; margin-right: 8px;">
+                                                Improved
+                                            </div>
+                                        </div>
+                                        <div class="d-flex m-0" style="color:#7A7979;">
+                                            <ul class="pl-3 mb-0">
+                                                <li><strong>No more full disk after interrupted backups</strong> - when Odoo stopped a backup at its time limit and reloaded itself, the temporary files of that backup stayed for up to 24 hours, and each retry added another copy until <code>/tmp</code> was full. They are now removed before the next backup starts, while the files of a running backup are never touched.</li>
+                                                <li><strong>Interrupted backups are retried once, then reported</strong> - a backup stopped by Odoo's time or memory limit, or by a restart, is started once more. If it is stopped again, it is marked as failed and you get the failure notification, naming the time limit to raise. Failures such as a full disk are not retried.</li>
+                                                <li><strong>Running status</strong> - backups in progress now show as Running, with the number of attempts after a retry.</li>
+                                                <li><strong>Upgrade note</strong> - upgrade the module to add the attempt counter. No new Python packages.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div style="padding:0 0 0; border-bottom:1px solid #E3E3E3"></div>
+                                </div>
+                            </div>
                             <!-- Version 20.0.1.1.3 -->
                             <div class="row pt-5 m-0">
                                 <div class="col-md-3">
                                     <h4 style="font-size:16px; font-weight:600; color:#514F4F; margin:0; line-height:26px;">
-                                        Latest Release 20.0.1.1.3
+                                        Version 20.0.1.1.3
                                     </h4>
                                     <span style="font-size:14px; color:#7A7979; display:block; margin-bottom:20px;">
                                         November 5, 2026
@@ -916,7 +948,7 @@ limit_time_real_cron = 10800</code></pre>
 
 <div class="footer" style="text-align: center; padding: 40px 20px; color: #777; font-size: 0.9em; background-color: #f9f9f9; margin-top: 40px;">
     <p style="margin: 5px 0;"><strong>Database Ultimate Backup Lite for Odoo 20.0</strong></p>
-    <p style="margin: 5px 0;">Version 1.1.3 | Licensed under MIT | Free</p>
+    <p style="margin: 5px 0;">Version 1.1.4 | Licensed under MIT | Free</p>
     <p style="margin: 5px 0;">Developed by René Hechavarría</p>
     <p style="margin-top: 15px; font-style: italic;">
         Free local &amp; SFTP backup solution with automated scheduling,
