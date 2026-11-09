@@ -35,6 +35,7 @@
                 </header>
                 <sheet>
                     <div class="alert alert-info" role="status" invisible="status != 'pending'">This backup is queued. The backup worker processes it in the background. Refresh to see the result.</div>
+                    <div class="alert alert-info" role="status" invisible="status != 'running'">This backup is running in the background. Refresh to see the result.</div>
                     <div class="oe_title">
                         <h1>
                             <field name="display_name"/>
@@ -53,6 +54,7 @@
                             <field name="start_time"/>
                             <field name="end_time"/>
                             <field name="duration_human"/>
+                            <field name="attempt_count" invisible="attempt_count &lt; 2"/>
                             <field name="duration" widget="float" string="Duration (s)"/>
                         </group>
                     </group>

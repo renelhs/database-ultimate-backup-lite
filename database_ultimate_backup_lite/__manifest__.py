@@ -65,7 +65,7 @@
     'maintainer': "René Hechavarría",
 
     'category': 'Administration',
-    'version': '19.0.1.6.3',
+    'version': '19.0.1.6.4',
 
     # Module dependencies
     'depends': ['base'],

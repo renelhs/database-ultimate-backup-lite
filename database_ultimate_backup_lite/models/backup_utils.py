@@ -2,11 +2,48 @@
 
 import datetime
 import os
+import socket
+import uuid
 
 from odoo.exceptions import AccessError, ValidationError
+from odoo.tools import config
 
 
 ADMIN_GROUP = 'database_ultimate_backup_lite.group_backup_admin'
+
+# Identifies this run of the Odoo process in temp-dir owner markers. A server
+# reload re-executes Odoo with the same PID (PID 1 in a container), so only a
+# value drawn when the module is imported tells a previous run from this one.
+_process_token = uuid.uuid4().hex
+
+
+def _renew_process_token():
+    global _process_token  # noqa: PLW0603
+    _process_token = uuid.uuid4().hex
+
+
+# Prefork workers are forked after the master imported the addons, so each
+# worker draws its own token instead of sharing the master's.
+if hasattr(os, 'register_at_fork'):
+    os.register_at_fork(after_in_child=_renew_process_token)
+
+
+def process_token():
+    return _process_token
+
+
+def process_origin():
+    """Name the host and PID namespace in which this process's PIDs are meaningful.
+
+    Containers sharing a temp directory each have their own PID 1, so a PID
+    read from a marker is only compared when the marker has the same origin.
+    """
+    origin = socket.gethostname()
+    try:
+        origin += ' ' + os.readlink('/proc/self/ns/pid')
+    except OSError:
+        pass  # no PID namespaces outside Linux
+    return origin
 
 
 def require_backup_admin(records):
@@ -41,3 +78,18 @@ def utc_datetime(value):
     if value.tzinfo is not None:
         value = value.astimezone(datetime.timezone.utc).replace(tzinfo=None)
     return value
+
+
+def cron_time_limit():
+    """Return Odoo's real-time limit for a scheduled action in seconds (0: none) and its setting.
+
+    Odoo 19 in prefork mode (workers > 0) applies limit_time_real_cron when it
+    is 0 or more (0 disables the limit) and limit_time_real when it is -1 (the
+    default). In threaded mode it applies limit_time_real_cron only when it is
+    above 0, so 0 does not disable the limit there.
+    """
+    cron_limit = config['limit_time_real_cron']
+    if cron_limit > 0 or (cron_limit == 0 and config['workers']):
+        return cron_limit, f"limit_time_real_cron = {cron_limit}"
+    return (config['limit_time_real'] or 0,
+            f"limit_time_real, applied because limit_time_real_cron is {cron_limit}")

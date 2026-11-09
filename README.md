@@ -206,6 +206,7 @@ limit_memory_hard = 2684354560
 ```
 
 - **Time:** aim for 2-3 times the duration your backup jobs actually take (see the job's **Duration**).
+- **Interrupted backups:** when Odoo stops a backup (time limit, memory limit or restart), the queue starts it once more and then marks it as failed, naming the time limit Odoo applied. The temporary files of the stopped attempt are removed before the next backup starts. On Odoo 19 in threaded mode (`workers = 0`), `limit_time_real_cron = 0` does not remove the time limit (Odoo then applies `limit_time_real`), so use a positive value.
 - **Memory:** keep both memory limits at least at Odoo's defaults (2 GB soft, 2.5 GB hard). They limit virtual memory per worker, not physical RAM; lower values can make backups fail with "Cannot allocate memory".
 - **Comments:** `odoo.conf` only accepts comments on their own line (starting with `;` or `#`). A line such as `limit_memory_hard = 2684354560 ; 2.5 GB` keeps the comment as part of the value and Odoo fails to start.
 
