@@ -38,6 +38,8 @@
           database dump requires the Backup Administrator group (or the backup
           cron user); read-only Backup Users cannot trigger dumps.
         * Administrator-only access to SFTP credentials
+        * Neutralized copies (``odoo-bin neutralize``, or a restore or
+          duplication with "Neutralize") drop the SFTP password
         * Granular model-level permissions
 
         Security Note: list_db and database dumps
@@ -65,7 +67,7 @@
     'maintainer': "René Hechavarría",
 
     'category': 'Administration',
-    'version': '19.0.1.6.4',
+    'version': '19.0.1.6.5',
 
     # Module dependencies
     'depends': ['base'],
