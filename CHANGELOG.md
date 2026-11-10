@@ -1,5 +1,17 @@
 # Changelog
 
+## [20.0.1.1.5] - 2026-11-10
+
+### Security
+
+- **Neutralized copies drop the SFTP password**: Odoo reads `data/neutralize.sql` when it neutralizes a database (`odoo-bin neutralize`, or a restore or duplication with "Neutralize" in the database manager). The SFTP password is now cleared there, so a copy of production can no longer upload to, list or delete from the production SFTP server. Odoo runs that file before any module upgrade, so only the columns that exist in the copy are cleared and databases from earlier versions are neutralized too.
+
+### Upgrade notes
+
+- No database change and no new Python dependency.
+- After neutralizing a database, its SFTP destinations remain without their password. To back up that copy, enter the password again, preferably for a separate server.
+- Destinations that authenticate with the SSH keys of the Odoo server's system user are not affected: those keys are not stored in the database, so a copy running on the same server can still connect with them.
+
 ## [20.0.1.1.4] - 2026-11-09
 
 ### Fixed
