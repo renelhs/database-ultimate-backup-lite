@@ -41,6 +41,7 @@ A free, reliable database backup solution for Odoo 18.0 with **local and SFTP re
 - Granular model-level permissions
 - System user for automated operations
 - Administrator-only access to SFTP passwords and transfer operations
+- Neutralized copies (`odoo-bin neutralize`, or a restore or duplication with **Neutralize**) drop the SFTP password
 - Local paths confined to the configured storage directory; verified uploads are published atomically with private file permissions
 
 Credentials are protected by Odoo access permissions; the module does not encrypt them in the database. ZIP/dump validation and checksums detect archive problems but do not replace a restore test. SFTP upload verification compares file sizes.

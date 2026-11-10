@@ -5,6 +5,31 @@ All notable changes to the Database Ultimate Backup Lite module will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.0.1.3.4] - 2026-11-10
+
+### Security
+
+- **Neutralized copies drop the SFTP password**: Odoo reads
+  `data/neutralize.sql` when it neutralizes a database
+  (`odoo-bin neutralize`, or a restore or duplication with "Neutralize" in
+  the database manager). The SFTP password is now cleared there, so a copy
+  of production can no longer upload to, list or delete from the production
+  SFTP server. Odoo runs that file before any module upgrade, so only the
+  columns that exist in the copy are cleared and databases from earlier
+  versions are neutralized too.
+
+### Upgrade notes
+
+- No database change and no new Python dependency.
+- After neutralizing a database, its SFTP destinations remain without their
+  password. To back up that copy, enter the password again, preferably for a
+  separate server.
+- Destinations that authenticate with the SSH keys of the Odoo server's
+  system user are not affected: those keys are not stored in the database,
+  so a copy running on the same server can still connect with them.
+
+---
+
 ## [18.0.1.3.3] - 2026-11-09
 
 ### Fixed
